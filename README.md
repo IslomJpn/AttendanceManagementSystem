@@ -362,7 +362,7 @@ AttendanceManagementSystemFinalDb
 
 | 権限 | メールアドレス | 初期パスワード |
 |---|---|---|
-| 管理者 | `admin@example.com` | `password` |
+| 管理者 | `admin@example.com` | `admin2026` |
 | 社員 | `employee@example.com` | `password` |
 
 初回ログイン後、パスワード変更画面へ移動します。
