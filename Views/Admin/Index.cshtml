@@ -1,0 +1,406 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminIndexViewModel
+
+@{
+    ViewData["Title"] = "管理者トップ";
+}
+
+@functions {
+    string FormatElapsedMinutes(int minutes)
+    {
+        var safeMinutes = Math.Max(0, minutes);
+        var hours = safeMinutes / 60;
+        var remainingMinutes = safeMinutes % 60;
+
+        if (hours > 0)
+        {
+            return $"{hours}時間{remainingMinutes}分";
+        }
+
+        return $"{remainingMinutes}分";
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-speedometer2 me-2"></i>
+        ダッシュボード
+    </h2>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <i class="bi bi-people"></i>
+
+        <div class="dashboard-card-title">
+            本日の出勤人数
+        </div>
+
+        <div class="dashboard-card-value">
+            @Model.TodayClockInCount 人
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <i class="bi bi-alarm"></i>
+
+        <div class="dashboard-card-title">
+            本日の遅刻人数
+        </div>
+
+        <div class="dashboard-card-value text-danger">
+            @Model.TodayLateCount 人
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <i class="bi bi-box-arrow-right"></i>
+
+        <div class="dashboard-card-title">
+            本日の退勤済み人数
+        </div>
+
+        <div class="dashboard-card-value">
+            @Model.TodayClockOutCount 人
+        </div>
+    </div>
+
+    <a asp-controller="Admin"
+       asp-action="CorrectionRequests"
+       class="dashboard-card dashboard-card-link">
+
+        <i class="bi bi-pencil-square"></i>
+
+        <div class="dashboard-card-title">
+            未承認の勤怠修正申請
+        </div>
+
+        <div class="dashboard-card-value">
+            @Model.PendingCorrectionRequestCount 件
+        </div>
+
+        <div class="dashboard-card-note">
+            クリックして確認
+        </div>
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="PaidLeaveRequests"
+       class="dashboard-card dashboard-card-link">
+
+        <i class="bi bi-calendar-check"></i>
+
+        <div class="dashboard-card-title">
+            未承認の有給申請
+        </div>
+
+        <div class="dashboard-card-value">
+            @Model.PendingPaidLeaveRequestCount 件
+        </div>
+
+        <div class="dashboard-card-note">
+            クリックして確認
+        </div>
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="PaidLeaveAlerts"
+       class="dashboard-card dashboard-card-link">
+
+        <i class="bi bi-bell"></i>
+
+        <div class="dashboard-card-title">
+            有給アラート対象者
+        </div>
+
+        <div class="dashboard-card-value text-warning">
+            @Model.PaidLeaveAlertCount 人
+        </div>
+
+        <div class="dashboard-card-note">
+            対象者を確認
+        </div>
+    </a>
+
+    <div class="dashboard-card">
+        <i class="bi bi-person-x-fill text-danger"></i>
+
+        <div class="dashboard-card-title">
+            出勤未打刻
+        </div>
+
+        <div class="dashboard-card-value text-danger">
+            @Model.MissingClockInCount 人
+        </div>
+
+        <div class="dashboard-card-note">
+            所定出勤時刻から15分経過
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <i class="bi bi-clock-history text-warning"></i>
+
+        <div class="dashboard-card-title">
+            退勤未打刻
+        </div>
+
+        <div class="dashboard-card-value text-warning">
+            @Model.MissingClockOutCount 人
+        </div>
+
+        <div class="dashboard-card-note">
+            所定退勤時刻から15分経過
+        </div>
+    </div>
+</div>
+
+<div class="page-panel mt-4 mb-4">
+    <div class="page-panel-title d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-person-x-fill text-danger me-1"></i>
+            出勤未打刻一覧
+        </div>
+
+        <span class="badge bg-danger">
+            @Model.MissingClockInCount 人
+        </span>
+    </div>
+
+    <div class="alert alert-light border mb-3">
+        <i class="bi bi-info-circle me-1"></i>
+        社員ごとの所定出勤時刻から15分以上経過しても、
+        出勤打刻が登録されていない社員を表示します。
+    </div>
+
+    @if (Model.MissingClockInEmployees.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-nowrap">
+                            社員ID
+                        </th>
+
+                        <th class="text-nowrap">
+                            氏名
+                        </th>
+
+                        <th class="text-nowrap">
+                            部署
+                        </th>
+
+                        <th class="text-nowrap">
+                            所定出勤時刻
+                        </th>
+
+                        <th class="text-nowrap">
+                            経過時間
+                        </th>
+
+                        <th class="text-nowrap">
+                            状態
+                        </th>
+
+                        <th class="text-nowrap">
+                            操作
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var employee in Model.MissingClockInEmployees)
+                    {
+                        <tr>
+                            <td class="fw-bold">
+                                @employee.EmployeeId
+                            </td>
+
+                            <td class="fw-bold text-nowrap">
+                                @employee.EmployeeName
+                            </td>
+
+                            <td class="text-nowrap">
+                                @(string.IsNullOrWhiteSpace(employee.DepartmentName)
+                                    ? "-"
+                                    : employee.DepartmentName)
+                            </td>
+
+                            <td class="text-nowrap">
+                                <i class="bi bi-clock me-1 text-primary"></i>
+                                @employee.ScheduledStartTime.ToString(@"hh\:mm")
+                            </td>
+
+                            <td class="text-nowrap text-danger fw-bold">
+                                @FormatElapsedMinutes(employee.ElapsedMinutes)
+                            </td>
+
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    出勤未打刻
+                                </span>
+                            </td>
+
+                            <td>
+                                <a asp-controller="Admin"
+                                   asp-action="EditEmployee"
+                                   asp-route-id="@employee.EmployeeId"
+                                   class="btn btn-sm btn-outline-primary text-nowrap">
+
+                                    <i class="bi bi-person-lines-fill me-1"></i>
+                                    社員情報
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            現在、出勤未打刻の社員はいません。
+        </div>
+    }
+</div>
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-clock-history text-warning me-1"></i>
+            退勤未打刻一覧
+        </div>
+
+        <span class="badge bg-warning text-dark">
+            @Model.MissingClockOutCount 人
+        </span>
+    </div>
+
+    <div class="alert alert-light border mb-3">
+        <i class="bi bi-info-circle me-1"></i>
+        出勤打刻は登録されていますが、社員ごとの所定退勤時刻から
+        15分以上経過しても退勤打刻が登録されていない社員を表示します。
+    </div>
+
+    @if (Model.MissingClockOutEmployees.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-nowrap">
+                            社員ID
+                        </th>
+
+                        <th class="text-nowrap">
+                            氏名
+                        </th>
+
+                        <th class="text-nowrap">
+                            部署
+                        </th>
+
+                        <th class="text-nowrap">
+                            出勤時刻
+                        </th>
+
+                        <th class="text-nowrap">
+                            所定退勤時刻
+                        </th>
+
+                        <th class="text-nowrap">
+                            経過時間
+                        </th>
+
+                        <th class="text-nowrap">
+                            状態
+                        </th>
+
+                        <th class="text-nowrap">
+                            操作
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var employee in Model.MissingClockOutEmployees)
+                    {
+                        <tr>
+                            <td class="fw-bold">
+                                @employee.EmployeeId
+                            </td>
+
+                            <td class="fw-bold text-nowrap">
+                                @employee.EmployeeName
+                            </td>
+
+                            <td class="text-nowrap">
+                                @(string.IsNullOrWhiteSpace(employee.DepartmentName)
+                                    ? "-"
+                                    : employee.DepartmentName)
+                            </td>
+
+                            <td class="text-nowrap">
+                                <i class="bi bi-box-arrow-in-right me-1 text-success"></i>
+                                @employee.ClockInTime.ToString(@"hh\:mm")
+                            </td>
+
+                            <td class="text-nowrap">
+                                <i class="bi bi-box-arrow-right me-1 text-primary"></i>
+                                @employee.ScheduledEndTime.ToString(@"hh\:mm")
+                            </td>
+
+                            <td class="text-nowrap text-warning fw-bold">
+                                @FormatElapsedMinutes(employee.ElapsedMinutes)
+                            </td>
+
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                    退勤未打刻
+                                </span>
+                            </td>
+
+                            <td>
+                                <a asp-controller="Admin"
+                                   asp-action="EditEmployee"
+                                   asp-route-id="@employee.EmployeeId"
+                                   class="btn btn-sm btn-outline-primary text-nowrap">
+
+                                    <i class="bi bi-person-lines-fill me-1"></i>
+                                    社員情報
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            現在、退勤未打刻の社員はいません。
+        </div>
+    }
+</div>

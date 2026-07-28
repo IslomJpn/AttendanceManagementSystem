@@ -1,0 +1,351 @@
+﻿@using System.Text.Json
+
+@model AttendanceManagementSystem.ViewModels.PaidLeaveCreateViewModel
+
+@{
+    ViewData["Title"] = "有給申請";
+
+    bool canApply =
+        Model.RemainingDays > 0;
+
+    var nonWorkingDaysJson =
+        JsonSerializer.Serialize(
+            Model.NonWorkingDays
+        );
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-calendar-plus me-2"></i>
+        有給申請
+    </h2>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle me-1"></i>
+        @Model.Message
+    </div>
+}
+
+@if (!canApply)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        現在、有給残日数がないため、
+        有給申請はできません。
+    </div>
+}
+else if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        入力内容を確認してください。
+    </div>
+}
+
+<div class="page-panel">
+    <div class="page-panel-title">
+        有給申請内容を入力してください
+    </div>
+
+    <div class="alert @(canApply
+        ? "alert-info"
+        : "alert-light border")">
+
+        <i class="bi bi-calendar-check me-1"></i>
+
+        有給残日数：
+        <strong>
+            @Model.RemainingDays.ToString("0.#") 日
+        </strong>
+    </div>
+
+    @if (canApply)
+    {
+        <div class="alert alert-light border">
+            <i class="bi bi-info-circle me-1"></i>
+
+            会社カレンダー上の
+            「出勤日」または「特別出勤日」のみ
+            有給申請できます。
+        </div>
+
+        <div id="nonWorkingDayAlert"
+             class="alert alert-danger d-none">
+
+            <div class="d-flex align-items-start">
+                <i class="bi bi-calendar-x-fill fs-5 me-2"></i>
+
+                <div>
+                    <div class="fw-bold">
+                        この日は有給申請できません
+                    </div>
+
+                    <div id="nonWorkingDayMessage"
+                         class="mt-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-controller="PaidLeave"
+              asp-action="Create"
+              method="post"
+              id="paidLeaveForm">
+
+            @Html.AntiForgeryToken()
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label asp-for="LeaveDate"
+                           class="form-label">
+                        取得日
+                    </label>
+
+                    <input asp-for="LeaveDate"
+                           id="leaveDateInput"
+                           type="text"
+                           class="form-control js-date-picker"
+                           autocomplete="off" />
+
+                    <span asp-validation-for="LeaveDate"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Days"
+                           class="form-label">
+                        日数
+                    </label>
+
+                    <select asp-for="Days"
+                            class="form-select">
+                        <option value="1">
+                            1日
+                        </option>
+
+                        <option value="0.5">
+                            0.5日
+                        </option>
+                    </select>
+
+                    <span asp-validation-for="Days"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="col-md-12">
+                    <label asp-for="Reason"
+                           class="form-label">
+                        理由
+                    </label>
+
+                    <textarea asp-for="Reason"
+                              class="form-control"
+                              rows="5"
+                              placeholder="理由を入力してください">
+                    </textarea>
+
+                    <span asp-validation-for="Reason"
+                          class="text-danger">
+                    </span>
+                </div>
+            </div>
+
+            <div class="action-area">
+                <button type="submit"
+                        id="submitButton"
+                        class="btn btn-primary">
+
+                    <i class="bi bi-send me-1"></i>
+                    申請する
+                </button>
+
+                <a asp-controller="Attendance"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left me-1"></i>
+                    戻る
+                </a>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+
+            <div class="empty-title">
+                申請できる有給がありません
+            </div>
+
+            <div class="empty-text">
+                有給付与条件を満たしていない、
+                または残日数がありません。
+                <br />
+
+                詳細は「有給状況」画面で
+                確認してください。
+            </div>
+
+            <div class="action-area">
+                <a asp-controller="PaidLeave"
+                   asp-action="MyBalance"
+                   class="btn btn-primary">
+
+                    <i class="bi bi-calendar-check me-1"></i>
+                    有給状況を確認
+                </a>
+
+                <a asp-controller="Attendance"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left me-1"></i>
+                    戻る
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                const nonWorkingDays =
+                    @Html.Raw(nonWorkingDaysJson);
+
+                const leaveDateInput =
+                    document.getElementById(
+                        "leaveDateInput"
+                    );
+
+                const alertArea =
+                    document.getElementById(
+                        "nonWorkingDayAlert"
+                    );
+
+                const alertMessage =
+                    document.getElementById(
+                        "nonWorkingDayMessage"
+                    );
+
+                const submitButton =
+                    document.getElementById(
+                        "submitButton"
+                    );
+
+                const paidLeaveForm =
+                    document.getElementById(
+                        "paidLeaveForm"
+                    );
+
+                if (!leaveDateInput ||
+                    !alertArea ||
+                    !alertMessage ||
+                    !submitButton ||
+                    !paidLeaveForm) {
+                    return;
+                }
+
+                const nonWorkingDayMap =
+                    new Map();
+
+                nonWorkingDays.forEach(
+                    function (item) {
+                        const dateText =
+                            String(
+                                item.CalendarDate
+                            ).substring(0, 10);
+
+                        nonWorkingDayMap.set(
+                            dateText,
+                            item.DisplayText
+                        );
+                    }
+                );
+
+                function validateSelectedDate() {
+                    const selectedDate =
+                        leaveDateInput.value;
+
+                    const holidayText =
+                        nonWorkingDayMap.get(
+                            selectedDate
+                        );
+
+                    if (holidayText) {
+                        alertMessage.textContent =
+                            selectedDate.replaceAll(
+                                "-",
+                                "/"
+                            ) +
+                            "は" +
+                            holidayText +
+                            "のため、有給申請できません。";
+
+                        alertArea.classList.remove(
+                            "d-none"
+                        );
+
+                        leaveDateInput.classList.add(
+                            "is-invalid"
+                        );
+
+                        submitButton.disabled =
+                            true;
+
+                        return false;
+                    }
+
+                    alertArea.classList.add(
+                        "d-none"
+                    );
+
+                    leaveDateInput.classList.remove(
+                        "is-invalid"
+                    );
+
+                    submitButton.disabled =
+                        false;
+
+                    return true;
+                }
+
+                leaveDateInput.addEventListener(
+                    "change",
+                    validateSelectedDate
+                );
+
+                leaveDateInput.addEventListener(
+                    "input",
+                    validateSelectedDate
+                );
+
+                paidLeaveForm.addEventListener(
+                    "submit",
+                    function (event) {
+                        if (!validateSelectedDate()) {
+                            event.preventDefault();
+
+                            alertArea.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center"
+                            });
+                        }
+                    }
+                );
+
+                validateSelectedDate();
+            }
+        );
+    </script>
+}

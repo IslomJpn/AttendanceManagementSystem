@@ -1,0 +1,427 @@
+﻿@model AttendanceManagementSystem.ViewModels.CompanyCalendarViewModel
+
+@{
+    ViewData["Title"] = "会社カレンダー";
+
+    var targetMonth =
+        new DateTime(
+            Model.TargetYear,
+            Model.TargetMonth,
+            1
+        );
+
+    var previousMonth =
+        targetMonth
+            .AddMonths(-1)
+            .ToString("yyyy-MM");
+
+    var nextMonth =
+        targetMonth
+            .AddMonths(1)
+            .ToString("yyyy-MM");
+
+    var currentYearMonth =
+        targetMonth.ToString("yyyy-MM");
+}
+
+@functions {
+    string GetDayTypeBadgeClass(string dayType)
+    {
+        return dayType switch
+        {
+            "出勤日" => "bg-primary",
+            "特別出勤日" => "bg-success",
+            "会社休日" => "bg-secondary",
+            "法定休日" => "bg-danger",
+            "祝日" => "bg-danger",
+            "年末年始休暇" => "bg-info text-dark",
+            "夏季休暇" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetRowClass(
+        bool isSaturday,
+        bool isSunday,
+        bool isWorkingDay)
+    {
+        if (!isWorkingDay)
+        {
+            return "table-light";
+        }
+
+        if (isSunday)
+        {
+            return "table-danger";
+        }
+
+        if (isSaturday)
+        {
+            return "table-primary";
+        }
+
+        return string.Empty;
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-calendar3 me-2"></i>
+        会社カレンダー
+    </h2>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title">
+        <i class="bi bi-calendar-month-fill me-1"></i>
+        表示年月
+    </div>
+
+    <form asp-controller="Attendance"
+          asp-action="CompanyCalendar"
+          method="get"
+          id="companyCalendarSearchForm"
+          class="row g-3 align-items-end">
+
+        <input type="hidden"
+               id="yearMonth"
+               name="yearMonth"
+               value="@currentYearMonth" />
+
+        <div class="col-md-3">
+            <label for="targetYear"
+                   class="form-label fw-bold">
+                年
+            </label>
+
+            <select id="targetYear"
+                    class="form-select"
+                    required>
+
+                @for (var year = 2000;
+                      year <= 2100;
+                      year++)
+                {
+                    if (year == Model.TargetYear)
+                    {
+                        <option value="@year" selected>
+                            @year 年
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@year">
+                            @year 年
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="targetMonth"
+                   class="form-label fw-bold">
+                月
+            </label>
+
+            <select id="targetMonth"
+                    class="form-select"
+                    required>
+
+                @for (var month = 1;
+                      month <= 12;
+                      month++)
+                {
+                    if (month == Model.TargetMonth)
+                    {
+                        <option value="@month" selected>
+                            @month 月
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@month">
+                            @month 月
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                <i class="bi bi-search me-1"></i>
+                表示
+            </button>
+        </div>
+
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <a asp-controller="Attendance"
+                   asp-action="CompanyCalendar"
+                   asp-route-yearMonth="@previousMonth"
+                   class="btn btn-outline-secondary flex-fill">
+
+                    <i class="bi bi-chevron-left me-1"></i>
+                    前月
+                </a>
+
+                <a asp-controller="Attendance"
+                   asp-action="CompanyCalendar"
+                   asp-route-yearMonth="@nextMonth"
+                   class="btn btn-outline-secondary flex-fill">
+
+                    翌月
+                    <i class="bi bi-chevron-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="border rounded-3 bg-light p-3 h-100">
+            <div class="text-secondary small mb-2">
+                <i class="bi bi-calendar3 me-1"></i>
+                対象年月
+            </div>
+
+            <div class="fw-bold fs-4">
+                @targetMonth.ToString("yyyy年MM月")
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="border rounded-3 bg-light p-3 h-100">
+            <div class="text-secondary small mb-2">
+                <i class="bi bi-briefcase-fill me-1"></i>
+                所定労働日数
+            </div>
+
+            <div class="fw-bold fs-4 text-primary">
+                @Model.WorkingDayCount 日
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="border rounded-3 bg-light p-3 h-100">
+            <div class="text-secondary small mb-2">
+                <i class="bi bi-house-door-fill me-1"></i>
+                休日数
+            </div>
+
+            <div class="fw-bold fs-4 text-danger">
+                @Model.HolidayCount 日
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.IsGenerated)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        この月の会社カレンダーはまだ公開されていません。
+        管理者に確認してください。
+    </div>
+}
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title d-flex
+        justify-content-between align-items-center">
+
+        <div>
+            <i class="bi bi-list-ul me-1"></i>
+            日付一覧
+        </div>
+
+        <span class="badge bg-dark">
+            @Model.Days.Count 日
+        </span>
+    </div>
+
+    @if (Model.Days.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-nowrap">日付</th>
+                        <th class="text-nowrap">曜日</th>
+                        <th class="text-nowrap">日付区分</th>
+                        <th class="text-nowrap">勤務区分</th>
+                        <th>休日・行事名</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var day in Model.Days)
+                    {
+                        var rowClass =
+                            GetRowClass(
+                                day.IsSaturday,
+                                day.IsSunday,
+                                day.IsWorkingDay
+                            );
+
+                        <tr class="@rowClass">
+                            <td class="fw-bold text-nowrap">
+                                @day.CalendarDate.ToString("yyyy/MM/dd")
+                            </td>
+
+                            <td>
+                                @if (day.IsSunday)
+                                {
+                                    <span class="fw-bold text-danger">
+                                        （@day.DayOfWeekName）
+                                    </span>
+                                }
+                                else if (day.IsSaturday)
+                                {
+                                    <span class="fw-bold text-primary">
+                                        （@day.DayOfWeekName）
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        （@day.DayOfWeekName）
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="badge @GetDayTypeBadgeClass(day.DayType)">
+                                    @day.DayType
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (day.IsWorkingDay)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-briefcase-fill me-1"></i>
+                                        所定労働日
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-house-door-fill me-1"></i>
+                                        休日
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @(string.IsNullOrWhiteSpace(day.HolidayName)
+                                    ? "-"
+                                    : day.HolidayName)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            表示できる会社カレンダーがありません。
+        </div>
+    }
+</div>
+
+<div class="alert alert-info">
+    <div class="fw-bold mb-2">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        カレンダーについて
+    </div>
+
+    <div>
+        所定労働日には通常どおり出勤打刻が必要です。
+        会社休日・法定休日・祝日などは、
+        通常の出勤対象日にはなりません。
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Attendance"
+       asp-action="Index"
+       class="btn btn-secondary">
+
+        <i class="bi bi-arrow-left me-1"></i>
+        トップへ戻る
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                const form =
+                    document.getElementById(
+                        "companyCalendarSearchForm"
+                    );
+
+                const yearSelect =
+                    document.getElementById(
+                        "targetYear"
+                    );
+
+                const monthSelect =
+                    document.getElementById(
+                        "targetMonth"
+                    );
+
+                const yearMonthInput =
+                    document.getElementById(
+                        "yearMonth"
+                    );
+
+                if (!form ||
+                    !yearSelect ||
+                    !monthSelect ||
+                    !yearMonthInput)
+                {
+                    return;
+                }
+
+                form.addEventListener(
+                    "submit",
+                    function () {
+                        const year =
+                            yearSelect.value;
+
+                        const month =
+                            monthSelect.value
+                                .padStart(
+                                    2,
+                                    "0"
+                                );
+
+                        yearMonthInput.value =
+                            year +
+                            "-" +
+                            month;
+                    }
+                );
+            }
+        );
+    </script>
+}

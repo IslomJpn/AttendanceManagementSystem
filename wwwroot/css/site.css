@@ -1,0 +1,766 @@
+html {
+    font-size: 14px;
+}
+
+body {
+    margin: 0;
+    background: #f5f7fb;
+    color: #1f2937;
+    font-family: "Segoe UI", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+/* =========================
+   Login Layout
+========================= */
+
+.login-header {
+    height: 72px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    padding: 0 48px;
+}
+
+.login-brand {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.login-main {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px 60px;
+    background: radial-gradient(circle at top left, #eef4ff 0%, transparent 35%), radial-gradient(circle at top right, #f4f8ff 0%, transparent 30%), linear-gradient(135deg, #eef2f7 0%, #e9edf5 100%);
+}
+
+.login-page {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 560px;
+    background: #ffffff;
+    border: 1px solid #dbe3ee;
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+}
+
+.login-window-dots {
+    height: 42px;
+    background: linear-gradient(to bottom, #f8fbff, #f1f5fb);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 18px;
+}
+
+    .login-window-dots span {
+        width: 10px;
+        height: 10px;
+        background: #c7d2e2;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+.login-card-inner {
+    padding: 38px 46px 34px;
+}
+
+.login-icon {
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 16px;
+    border: 2px solid #d9e3f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+    .login-icon i {
+        font-size: 34px;
+        color: #4f6fa8;
+    }
+
+.login-title {
+    text-align: center;
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 28px;
+}
+
+.login-card .form-label {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.input-icon-box {
+    position: relative;
+}
+
+    .input-icon-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 16px;
+        z-index: 2;
+    }
+
+    .input-icon-box input.form-control {
+        height: 54px;
+        border-radius: 12px;
+        border: 1px solid #d6deea;
+        background: #f8fbff;
+        padding-left: 46px;
+        font-size: 15px;
+        box-shadow: none;
+    }
+
+        .input-icon-box input.form-control:focus {
+            border-color: #4f8df7;
+            background: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.12);
+        }
+
+.login-button {
+    height: 52px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 16px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #2f80ff 0%, #1e63dc 100%);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24);
+    transition: all 0.2s ease;
+}
+
+    .login-button:hover {
+        transform: translateY(-1px);
+        background: linear-gradient(135deg, #256fe6 0%, #1b56bf 100%);
+        color: #ffffff;
+    }
+
+.login-test-users {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #e5eaf2;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #64748b;
+}
+
+/* =========================
+   App Layout
+========================= */
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    padding: 18px 14px;
+}
+
+.employee-sidebar {
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+}
+
+.admin-sidebar {
+    background: #252b33;
+    color: #ffffff;
+}
+
+.sidebar-logo {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 0 12px;
+    margin-bottom: 18px;
+}
+
+    .sidebar-logo i {
+        font-size: 22px;
+    }
+
+.admin-sidebar .sidebar-logo i {
+    color: #ffffff;
+}
+
+.employee-sidebar .sidebar-logo i {
+    color: #0d6efd;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    padding: 13px 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.employee-sidebar .sidebar-link {
+    color: #334155;
+}
+
+    .employee-sidebar .sidebar-link:hover,
+    .employee-sidebar .sidebar-link.active {
+        background: #eaf2ff;
+        color: #0d6efd;
+        font-weight: 700;
+    }
+
+.admin-sidebar .sidebar-link {
+    color: #d1d5db;
+}
+
+    .admin-sidebar .sidebar-link:hover,
+    .admin-sidebar .sidebar-link.active {
+        background: #3b4654;
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+.sidebar-link i {
+    font-size: 20px;
+}
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.app-topbar {
+    height: 64px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+}
+
+.topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+}
+
+    .topbar-user i {
+        font-size: 22px;
+    }
+
+.app-content {
+    flex: 1;
+    padding: 32px;
+}
+
+.app-footer {
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    padding: 14px 32px;
+    color: #6b7280;
+}
+
+/* =========================
+   Common
+========================= */
+
+h2 {
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.page-title-area {
+    margin-bottom: 20px;
+}
+
+.card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.card-header {
+    background: #ffffff;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table {
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table thead th {
+        background: #f8fafc;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* =========================
+   Admin Dashboard
+========================= */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    max-width: 1100px;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    min-height: 180px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+    .dashboard-card i {
+        display: block;
+        font-size: 34px;
+        margin-bottom: 10px;
+        color: #2563eb;
+    }
+
+.dashboard-card-title {
+    font-size: 15px;
+    color: #4b5563;
+    margin-bottom: 10px;
+}
+
+.dashboard-card-value {
+    font-size: 30px;
+    font-weight: 800;
+}
+
+/* =========================
+   Employee Top
+========================= */
+
+.attendance-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.attendance-action-card {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    border-radius: 16px;
+    padding: 26px;
+    text-align: center;
+    background: #ffffff;
+    border: 2px solid #dbeafe;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+    .attendance-action-card.clockin {
+        border-color: #3b82f6;
+        color: #1d4ed8;
+    }
+
+    .attendance-action-card.clockout {
+        border-color: #fecaca;
+        color: #dc2626;
+    }
+
+    .attendance-action-card i {
+        font-size: 42px;
+        margin-bottom: 8px;
+    }
+
+    .attendance-action-card .title {
+        font-size: 34px;
+        font-weight: 800;
+    }
+
+    .attendance-action-card.disabled-card {
+        cursor: default;
+        opacity: 0.85;
+    }
+
+    .attendance-action-card .subtitle {
+        font-size: 14px;
+        margin-top: 6px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+.attendance-card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.info-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px;
+    min-height: 120px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.info-card-title {
+    color: #475569;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+    .info-card-title i {
+        color: #2563eb;
+        margin-right: 6px;
+    }
+
+.info-card-value {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.info-card-sub {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: #374151;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 900px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        width: 100%;
+    }
+
+    .sidebar-menu {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .sidebar-link {
+        white-space: nowrap;
+    }
+
+    .attendance-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-card-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-header {
+        padding: 0 20px;
+    }
+
+    .login-brand {
+        font-size: 20px;
+    }
+
+    .login-card-inner {
+        padding: 28px 22px 24px;
+    }
+
+    .login-title {
+        font-size: 1.7rem;
+    }
+
+    .login-card {
+        max-width: 100%;
+    }
+}
+/* =========================
+   Page Panel / Form / Table Design
+========================= */
+
+.page-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    margin-bottom: 24px;
+}
+
+.page-panel-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 18px;
+    color: #0f172a;
+}
+
+.filter-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border: 1px solid #d6deea;
+    min-height: 42px;
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #4f8df7;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.12);
+    }
+
+.form-label {
+    font-weight: 700;
+    color: #334155;
+}
+
+.table-wrapper {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+    .table thead th {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table tbody td {
+        padding: 13px 12px;
+        vertical-align: middle;
+    }
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: #fbfdff;
+}
+
+.badge {
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 700;
+}
+
+.action-area {
+    margin-top: 18px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.paidleave-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .paidleave-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.monthly-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .monthly-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
+
+/* =========================
+   Footer Fix
+========================= */
+
+.app-footer {
+    text-align: center;
+    font-size: 14px;
+    padding: 20px 32px;
+    color: #64748b;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.login-header + .login-main {
+    padding-bottom: 40px;
+}
+
+/* =========================
+   Japanese Calendar Design
+========================= */
+
+.flatpickr-calendar {
+    font-family: "Segoe UI", "Yu Gothic", "Meiryo", sans-serif;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    border: 1px solid #dbe3ee;
+}
+
+.flatpickr-months {
+    background: #f8fafc;
+    border-radius: 14px 14px 0 0;
+}
+
+.flatpickr-current-month {
+    font-weight: 700;
+}
+
+    .flatpickr-current-month .cur-month {
+        font-weight: 800;
+    }
+
+.flatpickr-weekdays {
+    background: #f8fafc;
+}
+
+.flatpickr-weekday {
+    color: #334155;
+    font-weight: 700;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.flatpickr-day.today {
+    border-color: #2563eb;
+}
+
+.flatpickr-input[readonly] {
+    background: #ffffff;
+}
+
+.flatpickr-monthSelect-month.selected {
+    background: #2563eb;
+    color: #ffffff;
+    border-radius: 8px;
+}
+
+.flatpickr-monthSelect-month:hover {
+    background: #eaf2ff;
+    border-radius: 8px;
+}
+
+/* =========================
+   Empty State
+========================= */
+
+.empty-state {
+    text-align: center;
+    padding: 36px 20px;
+    color: #64748b;
+}
+
+    .empty-state > i {
+        font-size: 42px;
+        color: #94a3b8;
+        margin-bottom: 12px;
+    }
+
+    .empty-state .btn i {
+        font-size: 14px;
+        color: inherit;
+        margin-bottom: 0;
+    }
+
+.empty-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.empty-text {
+    font-size: 14px;
+    line-height: 1.8;
+}
+/* =========================
+   Notice Textarea
+========================= */
+
+.notice-textarea {
+    font-size: 14px;
+    line-height: 1.8;
+    background: #f8fafc;
+    resize: vertical;
+}

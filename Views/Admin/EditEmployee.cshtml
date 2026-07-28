@@ -1,0 +1,418 @@
+﻿@model AttendanceManagementSystem.ViewModels.EmployeeEditViewModel
+
+@{
+    ViewData["Title"] = "社員編集";
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-person-gear me-2"></i>
+        社員編集
+    </h2>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        入力内容を確認してください。
+    </div>
+}
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle-fill me-1"></i>
+    勤務時間、所定労働時間、休憩時間を変更すると、
+    今後の遅刻時間、実働時間、休憩時間、
+    残業時間の計算基準が変更されます。
+</div>
+
+<form asp-controller="Admin"
+      asp-action="EditEmployee"
+      method="post"
+      autocomplete="off">
+
+    @Html.AntiForgeryToken()
+
+    <input asp-for="EmployeeId"
+           type="hidden" />
+
+    <div class="page-panel mb-4">
+        <div class="page-panel-title">
+            <i class="bi bi-person-vcard me-1"></i>
+            基本情報
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="Name"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="Name"
+                       class="form-control"
+                       placeholder="氏名を入力してください"
+                       autocomplete="name" />
+
+                <span asp-validation-for="Name"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Email"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="Email"
+                       type="email"
+                       class="form-control"
+                       placeholder="メールアドレスを入力してください"
+                       autocomplete="email" />
+
+                <span asp-validation-for="Email"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="DepartmentId"
+                       class="form-label fw-bold">
+                </label>
+
+                <select asp-for="DepartmentId"
+                        class="form-select">
+
+                    <option value="0">
+                        選択してください
+                    </option>
+
+                    @foreach (var department in Model.Departments)
+                    {
+                        <option value="@department.DepartmentId">
+                            @department.DepartmentName
+                        </option>
+                    }
+                </select>
+
+                <span asp-validation-for="DepartmentId"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Role"
+                       class="form-label fw-bold">
+                </label>
+
+                <select asp-for="Role"
+                        class="form-select">
+                    <option value="Employee">
+                        社員
+                    </option>
+
+                    <option value="Admin">
+                        管理者
+                    </option>
+                </select>
+
+                <span asp-validation-for="Role"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="JoinDate"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="JoinDate"
+                       type="text"
+                       class="form-control js-date-picker"
+                       value="@Model.JoinDate.ToString("yyyy-MM-dd")"
+                       autocomplete="off" />
+
+                <span asp-validation-for="JoinDate"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="IsActive"
+                       class="form-label fw-bold">
+                </label>
+
+                <select asp-for="IsActive"
+                        class="form-select">
+                    <option value="true">
+                        有効
+                    </option>
+
+                    <option value="false">
+                        無効
+                    </option>
+                </select>
+
+                <div class="form-text">
+                    無効化しても過去の勤怠データは削除されません。
+                </div>
+
+                <span asp-validation-for="IsActive"
+                      class="text-danger">
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-panel mb-4">
+        <div class="page-panel-title">
+            <i class="bi bi-clock-fill me-1"></i>
+            勤務時間設定
+        </div>
+
+        <div class="alert alert-light border">
+            <i class="bi bi-calculator me-1"></i>
+            遅刻時間は所定出勤時刻、
+            残業時間は所定労働時間を基準に計算されます。
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="ScheduledStartTime"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="ScheduledStartTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="ScheduledStartTime"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="ScheduledEndTime"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="ScheduledEndTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="ScheduledEndTime"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-bold">
+                    所定労働時間
+                </label>
+
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input asp-for="ScheduledWorkHours"
+                                   type="number"
+                                   min="0"
+                                   max="23"
+                                   class="form-control" />
+
+                            <span class="input-group-text">
+                                時間
+                            </span>
+                        </div>
+
+                        <span asp-validation-for="ScheduledWorkHours"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input asp-for="ScheduledWorkMinutePart"
+                                   type="number"
+                                   min="0"
+                                   max="59"
+                                   class="form-control" />
+
+                            <span class="input-group-text">
+                                分
+                            </span>
+                        </div>
+
+                        <span asp-validation-for="ScheduledWorkMinutePart"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-text">
+                    例：8時間の場合は「8時間・0分」に設定します。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-panel mb-4">
+        <div class="page-panel-title">
+            <i class="bi bi-cup-hot-fill me-1"></i>
+            休憩時間設定
+        </div>
+
+        <div class="alert alert-light border">
+            <i class="bi bi-info-circle me-1"></i>
+            実働時間は、出勤時刻から退勤時刻までの時間から、
+            実際に重なった休憩時間を差し引いて計算します。
+        </div>
+
+        <div class="mb-3 fw-bold">
+            昼休憩
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="LunchBreakStartTime"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="LunchBreakStartTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="LunchBreakStartTime"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="LunchBreakEndTime"
+                       class="form-label fw-bold">
+                </label>
+
+                <input asp-for="LunchBreakEndTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="LunchBreakEndTime"
+                      class="text-danger">
+                </span>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="mb-3">
+            <div class="fw-bold">
+                <i class="bi bi-clock-history me-1"></i>
+                小休憩1
+            </div>
+
+            <div class="form-text">
+                小休憩がない場合は、開始時刻と終了時刻を
+                両方空欄にしてください。
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="SmallBreak1StartTime"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SmallBreak1StartTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="SmallBreak1StartTime"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SmallBreak1EndTime"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SmallBreak1EndTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="SmallBreak1EndTime"
+                      class="text-danger">
+                </span>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="mb-3">
+            <div class="fw-bold">
+                <i class="bi bi-clock-history me-1"></i>
+                小休憩2
+            </div>
+
+            <div class="form-text">
+                2回目の小休憩がない場合は、
+                開始時刻と終了時刻を両方空欄にしてください。
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="SmallBreak2StartTime"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SmallBreak2StartTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="SmallBreak2StartTime"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SmallBreak2EndTime"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SmallBreak2EndTime"
+                       type="time"
+                       step="60"
+                       class="form-control" />
+
+                <span asp-validation-for="SmallBreak2EndTime"
+                      class="text-danger">
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-area">
+        <button type="submit"
+                class="btn btn-primary">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            更新する
+        </button>
+
+        <a asp-controller="Admin"
+           asp-action="Employees"
+           class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            戻る
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

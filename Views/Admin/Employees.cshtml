@@ -1,0 +1,408 @@
+﻿@using Microsoft.AspNetCore.Http
+@model AttendanceManagementSystem.ViewModels.EmployeeListViewModel
+
+@{
+    ViewData["Title"] = "社員一覧";
+
+    var currentAdminId =
+        Context.Session.GetInt32("LoginUserId");
+}
+
+@functions {
+    string FormatWorkMinutes(int minutes)
+    {
+        var safeMinutes =
+            Math.Max(0, minutes);
+
+        var hours =
+            safeMinutes / 60;
+
+        var minutePart =
+            safeMinutes % 60;
+
+        return $"{hours}時間{minutePart:D2}分";
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-people-fill me-2"></i>
+        社員一覧
+    </h2>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="filter-panel">
+    <form asp-controller="Admin"
+          asp-action="Employees"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-3">
+            <label class="form-label fw-bold">
+                部署
+            </label>
+
+            <select name="departmentId"
+                    class="form-select">
+
+                <option value="">
+                    すべて
+                </option>
+
+                @foreach (var department in Model.Departments)
+                {
+                    if (Model.DepartmentId ==
+                        department.DepartmentId)
+                    {
+                        <option value="@department.DepartmentId"
+                                selected>
+                            @department.DepartmentName
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@department.DepartmentId">
+                            @department.DepartmentName
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label fw-bold">
+                検索キーワード
+            </label>
+
+            <input type="text"
+                   name="keyword"
+                   value="@Model.Keyword"
+                   class="form-control"
+                   placeholder="社員名またはメールアドレス" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                <i class="bi bi-search me-1"></i>
+                検索
+            </button>
+        </div>
+
+        <div class="col-md-2">
+            <a asp-controller="Admin"
+               asp-action="CreateEmployee"
+               class="btn btn-success w-100">
+
+                <i class="bi bi-person-plus-fill me-1"></i>
+                新規登録
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="text-nowrap">
+                        ID
+                    </th>
+
+                    <th class="text-nowrap">
+                        氏名
+                    </th>
+
+                    <th>
+                        メールアドレス
+                    </th>
+
+                    <th class="text-nowrap">
+                        部署
+                    </th>
+
+                    <th class="text-nowrap">
+                        権限
+                    </th>
+
+                    <th class="text-nowrap">
+                        勤務条件
+                    </th>
+
+                    <th class="text-nowrap">
+                        初回PW
+                    </th>
+
+                    <th class="text-nowrap">
+                        利用状態
+                    </th>
+
+                    <th class="text-nowrap">
+                        ログイン状態
+                    </th>
+
+                    <th class="text-nowrap">
+                        操作
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Employees.Any())
+                {
+                    foreach (var employee in Model.Employees)
+                    {
+                        var isCurrentAdmin =
+                            currentAdminId.HasValue &&
+                            currentAdminId.Value ==
+                            employee.EmployeeId;
+
+                        <tr>
+                            <td class="fw-bold">
+                                @employee.EmployeeId
+                            </td>
+
+                            <td>
+                                <div class="fw-bold text-nowrap">
+                                    @employee.Name
+                                </div>
+
+                                @if (isCurrentAdmin)
+                                {
+                                    <div class="small text-primary mt-1">
+                                        <i class="bi bi-person-check-fill me-1"></i>
+                                        ログイン中
+                                    </div>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="text-break">
+                                    @employee.Email
+                                </span>
+                            </td>
+
+                            <td class="text-nowrap">
+                                @employee.DepartmentName
+                            </td>
+
+                            <td>
+                                @if (employee.Role == "Admin")
+                                {
+                                    <span class="badge bg-dark">
+                                        <i class="bi bi-shield-lock-fill me-1"></i>
+                                        管理者
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-person-fill me-1"></i>
+                                        社員
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="text-nowrap">
+                                    <i class="bi bi-clock me-1 text-primary"></i>
+
+                                    <span class="fw-bold">
+                                        @employee.ScheduledStartTime.ToString(@"hh\:mm")
+                                        ～
+                                        @employee.ScheduledEndTime.ToString(@"hh\:mm")
+                                    </span>
+                                </div>
+
+                                <div class="small text-muted text-nowrap mt-1">
+                                    所定：
+                                    @FormatWorkMinutes(
+                                        employee.ScheduledWorkMinutes
+                                    )
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (employee.MustChangePassword)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        変更必須
+                                    </span>
+
+                                    <div class="small text-warning mt-1">
+                                        初回ログイン未完了
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        変更済み
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (employee.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        有効
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-dash-circle me-1"></i>
+                                        無効
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (employee.IsLocked)
+                                {
+                                    <div>
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-lock-fill me-1"></i>
+                                            ロック中
+                                        </span>
+                                    </div>
+
+                                    <div class="small text-danger mt-1 text-nowrap">
+                                        残り約
+                                        @employee.RemainingLockMinutes
+                                        分
+                                    </div>
+
+                                    @if (employee.LockoutEndAt.HasValue)
+                                    {
+                                        <div class="small text-muted text-nowrap">
+                                            @employee.LockoutEndAt.Value.ToString("yyyy/MM/dd HH:mm")
+                                            まで
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div>
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-unlock-fill me-1"></i>
+                                            通常
+                                        </span>
+                                    </div>
+
+                                    @if (employee.FailedLoginCount > 0)
+                                    {
+                                        <div class="small text-warning mt-1 text-nowrap">
+                                            ログイン失敗
+                                            @employee.FailedLoginCount
+                                            回
+                                        </div>
+                                    }
+                                }
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <a asp-controller="Admin"
+                                       asp-action="EditEmployee"
+                                       asp-route-id="@employee.EmployeeId"
+                                       class="btn btn-sm btn-warning text-nowrap">
+
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        編集
+                                    </a>
+
+                                    @if (!isCurrentAdmin)
+                                    {
+                                        <a asp-controller="Admin"
+                                           asp-action="ResetEmployeePassword"
+                                           asp-route-id="@employee.EmployeeId"
+                                           class="btn btn-sm btn-outline-danger text-nowrap"
+                                           title="仮パスワードを再発行します">
+
+                                            <i class="bi bi-key-fill me-1"></i>
+                                            PW再発行
+                                        </a>
+                                    }
+
+                                    @if (employee.IsLocked)
+                                    {
+                                        <form asp-controller="Admin"
+                                              asp-action="UnlockEmployee"
+                                              method="post"
+                                              class="d-inline"
+                                              onsubmit="return confirm('この社員のアカウントロックを解除しますか？');">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@employee.EmployeeId" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger text-nowrap">
+
+                                                <i class="bi bi-unlock-fill me-1"></i>
+                                                ロック解除
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+
+                                @if (isCurrentAdmin)
+                                {
+                                    <div class="small text-muted mt-2">
+                                        自分のパスワードは画面上部の
+                                        「パスワード変更」から変更してください。
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="10"
+                            class="text-center text-muted py-5">
+
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            条件に一致する社員データがありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

@@ -1,0 +1,210 @@
+﻿@model AttendanceManagementSystem.ViewModels.CorrectionHistoryViewModel
+
+@{
+    ViewData["Title"] = "勤怠修正履歴";
+}
+
+@functions {
+    string FormatTime(TimeSpan? time)
+    {
+        return time.HasValue
+            ? time.Value.ToString(@"hh\:mm")
+            : "-";
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-clock-history me-2"></i>
+        勤怠修正履歴
+    </h2>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i>
+    これまでに申請した勤怠修正の内容、承認状況、管理者コメントを確認できます。
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>申請ID</th>
+                    <th>対象日</th>
+                    <th>修正項目</th>
+                    <th>修正前</th>
+                    <th>修正後</th>
+                    <th>申請理由</th>
+                    <th>申請日時</th>
+                    <th>状態</th>
+                    <th>処理日時</th>
+                    <th>処理者</th>
+                    <th>管理者コメント</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @item.RequestId
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.TargetDate.ToString("yyyy/MM/dd")
+                            </td>
+
+                            <td>
+                                @if (item.CorrectionType == "出勤時間")
+                                {
+                                    <span class="badge bg-primary">
+                                        出勤時間
+                                    </span>
+                                }
+                                else if (item.CorrectionType == "退勤時間")
+                                {
+                                    <span class="badge bg-dark">
+                                        退勤時間
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @item.CorrectionType
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatTime(item.BeforeTime)
+                            </td>
+
+                            <td class="text-nowrap fw-bold">
+                                @item.AfterTime.ToString(@"hh\:mm")
+                            </td>
+
+                            <td style="min-width: 220px;">
+                                @if (string.IsNullOrWhiteSpace(item.Reason))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @item.Reason
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </td>
+
+                            <td>
+                                @if (item.Status == "申請中")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        申請中
+                                    </span>
+                                }
+                                else if (item.Status == "承認")
+                                {
+                                    <span class="badge bg-success">
+                                        承認
+                                    </span>
+                                }
+                                else if (item.Status == "却下")
+                                {
+                                    <span class="badge bg-danger">
+                                        却下
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @item.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @if (item.ApprovedAt.HasValue)
+                                {
+                                    @item.ApprovedAt.Value.ToString("yyyy/MM/dd HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(item.ApprovedByName) ||
+                                     item.ApprovedByName == "-")
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    <div class="fw-bold">
+                                        @item.ApprovedByName
+                                    </div>
+
+                                    @if (item.ApprovedBy.HasValue)
+                                    {
+                                        <div class="small text-muted">
+                                            ID: @item.ApprovedBy
+                                        </div>
+                                    }
+                                }
+                            </td>
+
+                            <td style="min-width: 240px;">
+                                @if (string.IsNullOrWhiteSpace(item.AdminComment))
+                                {
+                                    <span class="text-muted">
+                                        コメントなし
+                                    </span>
+                                }
+                                else
+                                {
+                                    <div class="text-break">
+                                        @item.AdminComment
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11"
+                            class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            勤怠修正申請の履歴がありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Correction"
+       asp-action="Create"
+       class="btn btn-primary">
+        <i class="bi bi-pencil-square me-1"></i>
+        新しい修正申請
+    </a>
+
+    <a asp-controller="Attendance"
+       asp-action="Index"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

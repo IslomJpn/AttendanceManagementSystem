@@ -1,0 +1,75 @@
+﻿@model AttendanceManagementSystem.ViewModels.CorrectionCreateViewModel
+
+@{
+    ViewData["Title"] = "勤怠修正申請";
+}
+
+@functions {
+    string FormatTime(TimeSpan? time)
+    {
+        return time.HasValue ? time.Value.ToString(@"hh\:mm") : "-";
+    }
+}
+
+<div class="page-title-area">
+    <h2><i class="bi bi-pencil-square me-2"></i>勤怠修正申請</h2>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-info">
+        @Model.Message
+    </div>
+}
+
+<div class="page-panel">
+    <div class="page-panel-title">
+        修正内容を入力してください
+    </div>
+
+    <form asp-controller="Correction" asp-action="Create" method="post">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">対象日</label>
+                <input name="TargetDate" value="@Model.TargetDate.ToString("yyyy-MM-dd")" type="text" class="form-control js-date-picker" />
+                <span asp-validation-for="TargetDate" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">修正項目</label>
+                <select asp-for="CorrectionType" class="form-select">
+                    <option value="出勤時間">出勤時間</option>
+                    <option value="退勤時間">退勤時間</option>
+                </select>
+                <span asp-validation-for="CorrectionType" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">修正前の時間</label>
+                <input value="@FormatTime(Model.BeforeTime)" class="form-control" readonly />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">修正後の時間</label>
+                <input asp-for="AfterTime" type="time" class="form-control" />
+                <span asp-validation-for="AfterTime" class="text-danger"></span>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">理由</label>
+                <textarea asp-for="Reason" class="form-control" rows="5" placeholder="理由を入力してください"></textarea>
+                <span asp-validation-for="Reason" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-1"></i>申請する
+            </button>
+
+            <a asp-controller="Attendance" asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>戻る
+            </a>
+        </div>
+    </form>
+</div>

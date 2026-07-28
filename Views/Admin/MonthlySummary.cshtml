@@ -1,0 +1,396 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminMonthlySummaryViewModel
+
+@{
+    ViewData["Title"] = "月別集計";
+}
+
+@functions {
+    string FormatMinutes(int minutes)
+    {
+        var safeMinutes =
+            Math.Max(0, minutes);
+
+        var hours =
+            safeMinutes / 60;
+
+        var remainingMinutes =
+            safeMinutes % 60;
+
+        return
+            $"{hours:D2}:{remainingMinutes:D2}";
+    }
+
+    string FormatDays(double days)
+    {
+        return days.ToString("0.#");
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-bar-chart me-2"></i>
+        月別集計
+    </h2>
+</div>
+
+<div class="filter-panel">
+    <form asp-controller="Admin"
+          asp-action="MonthlySummary"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-4">
+            <label class="form-label">
+                対象年月
+            </label>
+
+            <input type="text"
+                   name="yearMonth"
+                   value="@Model.YearMonth"
+                   class="form-control js-month-picker" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">
+                部署
+            </label>
+
+            <select name="departmentId"
+                    class="form-select">
+
+                <option value="">
+                    すべて
+                </option>
+
+                @foreach (var department
+                          in Model.Departments)
+                {
+                    if (Model.DepartmentId ==
+                        department.DepartmentId)
+                    {
+                        <option value="@department.DepartmentId"
+                                selected>
+                            @department.DepartmentName
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@department.DepartmentId">
+                            @department.DepartmentName
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                <i class="bi bi-search me-1"></i>
+                検索
+            </button>
+        </div>
+    </form>
+</div>
+
+@if (!Model.IsCompanyCalendarGenerated)
+{
+    <div class="alert alert-warning d-flex align-items-start">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+
+        <div>
+            <div class="fw-bold">
+                会社カレンダーが未作成です
+            </div>
+
+            <div class="small mt-1">
+                対象月の会社カレンダーを作成してから、
+                所定労働日数・休日数・未打刻日数を確認してください。
+            </div>
+
+            <div class="mt-2">
+                <a asp-controller="Admin"
+                   asp-action="CompanyCalendar"
+                   asp-route-yearMonth="@Model.YearMonth"
+                   class="btn btn-sm btn-warning">
+
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    会社カレンダーを確認
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="monthly-summary-grid mb-4">
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-people"></i>
+            対象社員数
+        </div>
+
+        <div class="info-card-value">
+            @Model.TotalEmployeeCount 人
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-calendar-check"></i>
+            会社所定労働日数
+        </div>
+
+        <div class="info-card-value">
+            @Model.CompanyWorkingDayCount 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-calendar-x"></i>
+            会社休日数
+        </div>
+
+        <div class="info-card-value">
+            @Model.CompanyHolidayCount 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-person-check"></i>
+            総出勤日数
+        </div>
+
+        <div class="info-card-value">
+            @Model.TotalAttendanceDays 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-calendar2-heart"></i>
+            総有給取得日数
+        </div>
+
+        <div class="info-card-value">
+            @FormatDays(Model.TotalPaidLeaveDays) 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-person-x-fill"></i>
+            総欠勤日数
+        </div>
+
+        <div class="info-card-value
+            @(Model.TotalAbsenceDays > 0
+                 ? "text-danger"
+                 : "")">
+
+            @Model.TotalAbsenceDays 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-exclamation-circle"></i>
+            総未打刻日数
+        </div>
+
+        <div class="info-card-value
+            @(Model.TotalMissingStampDays > 0
+                 ? "text-danger"
+                 : "")">
+
+            @FormatDays(Model.TotalMissingStampDays) 日
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-hourglass-split"></i>
+            総実働時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatMinutes(Model.TotalWorkMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-alarm"></i>
+            総遅刻時間
+        </div>
+
+        <div class="info-card-value
+            @(Model.TotalLateMinutes > 0
+                 ? "text-danger"
+                 : "")">
+
+            @FormatMinutes(Model.TotalLateMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-clock-history"></i>
+            総残業時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatMinutes(Model.TotalOvertimeMinutes)
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-light border mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+
+    欠勤日数は、管理者が欠勤として確定した日を集計しています。
+    未打刻日数は、会社カレンダー上の所定労働日のうち、
+    出勤打刻・承認済み有給・欠勤確定のいずれもない
+    過去の日を集計しています。
+    半日有給の場合は、残りの0.5日を未打刻として計算します。
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>社員ID</th>
+                    <th>社員名</th>
+                    <th>部署</th>
+                    <th class="text-center">
+                        所定労働日数
+                    </th>
+                    <th class="text-center">
+                        休日数
+                    </th>
+                    <th class="text-center">
+                        出勤日数
+                    </th>
+                    <th class="text-center">
+                        有給取得日数
+                    </th>
+                    <th class="text-center">
+                        欠勤日数
+                    </th>
+                    <th class="text-center">
+                        未打刻日数
+                    </th>
+                    <th class="text-center">
+                        実働時間
+                    </th>
+                    <th class="text-center">
+                        遅刻時間
+                    </th>
+                    <th class="text-center">
+                        残業時間
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @item.EmployeeId
+                            </td>
+
+                            <td class="fw-semibold">
+                                @item.EmployeeName
+                            </td>
+
+                            <td>
+                                @item.DepartmentName
+                            </td>
+
+                            <td class="text-center">
+                                @item.ScheduledWorkDays 日
+                            </td>
+
+                            <td class="text-center">
+                                @item.HolidayDays 日
+                            </td>
+
+                            <td class="text-center">
+                                @item.WorkDays 日
+                            </td>
+
+                            <td class="text-center">
+                                @FormatDays(item.PaidLeaveDays) 日
+                            </td>
+
+                            <td class="text-center
+                                @(item.AbsenceDays > 0
+                                    ? "text-danger fw-bold"
+                                    : "")">
+
+                                @item.AbsenceDays 日
+                            </td>
+
+                            <td class="text-center
+                                @(item.MissingStampDays > 0
+                                    ? "text-warning fw-bold"
+                                    : "")">
+
+                                @FormatDays(item.MissingStampDays) 日
+                            </td>
+
+                            <td class="text-center">
+                                @FormatMinutes(
+                                    item.TotalWorkMinutes
+                                )
+                            </td>
+
+                            <td class="text-center
+                                @(item.TotalLateMinutes > 0
+                                    ? "text-danger fw-bold"
+                                    : "")">
+
+                                @FormatMinutes(
+                                    item.TotalLateMinutes
+                                )
+                            </td>
+
+                            <td class="text-center">
+                                @FormatMinutes(
+                                    item.TotalOvertimeMinutes
+                                )
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="12"
+                            class="text-center text-muted py-4">
+
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            対象データがありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

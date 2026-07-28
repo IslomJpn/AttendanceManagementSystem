@@ -1,0 +1,96 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminPaidLeaveNoticeViewModel
+
+@{
+    ViewData["Title"] = "有給通知文作成";
+}
+
+@functions {
+    string FormatDate(DateTime? date)
+    {
+        return date.HasValue ? date.Value.ToString("yyyy/MM/dd") : "-";
+    }
+
+    string FormatDays(double days)
+    {
+        return days.ToString("0.#") + " 日";
+    }
+}
+
+<div class="page-title-area">
+    <h2><i class="bi bi-envelope-paper me-2"></i>有給通知文作成</h2>
+</div>
+
+<div class="page-panel">
+    <div class="page-panel-title">
+        通知対象者
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="small text-muted">社員名</div>
+            <div class="fw-bold">@Model.EmployeeName</div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small text-muted">部署</div>
+            <div class="fw-bold">@Model.DepartmentName</div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small text-muted">有給付与日</div>
+            <div class="fw-bold">@FormatDate(Model.CurrentGrantDate)</div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small text-muted">取得期限</div>
+            <div class="fw-bold">@FormatDate(Model.FiveDayDeadline)</div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small text-muted">使用日数</div>
+            <div class="fw-bold">@FormatDays(Model.UsedDays)</div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small text-muted">必要日数</div>
+            <div class="fw-bold text-danger">
+                あと @FormatDays(Model.RemainingFiveDayRequirement)
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-panel mt-4">
+    <div class="page-panel-title">
+        通知文
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-1"></i>
+        下記の文章をコピーして、社員へメールまたはチャットで送信してください。
+    </div>
+
+    <textarea class="form-control notice-textarea" rows="13" readonly>@Model.NoticeText</textarea>
+
+    <div class="action-area">
+        <button type="button" class="btn btn-primary" onclick="copyNoticeText()">
+            <i class="bi bi-clipboard-check me-1"></i>通知文をコピー
+        </button>
+
+        <a asp-controller="Admin" asp-action="PaidLeaveAlerts" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>戻る
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyNoticeText() {
+            const textarea = document.querySelector(".notice-textarea");
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("通知文をコピーしました。");
+        }
+    </script>
+}

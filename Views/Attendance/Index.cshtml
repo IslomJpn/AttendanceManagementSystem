@@ -1,0 +1,762 @@
+﻿@model AttendanceManagementSystem.ViewModels.AttendanceIndexViewModel
+
+@{
+    ViewData["Title"] = "社員トップ";
+}
+
+@functions {
+    string FormatTime(TimeSpan? time)
+    {
+        return time.HasValue
+            ? time.Value.ToString(@"hh\:mm")
+            : "-";
+    }
+
+    string FormatMinutes(int minutes)
+    {
+        var safeMinutes = Math.Max(0, minutes);
+        var hours = safeMinutes / 60;
+        var remainingMinutes = safeMinutes % 60;
+
+        return $"{hours:D2}:{remainingMinutes:D2}";
+    }
+
+    string FormatBreak(
+        TimeSpan? startTime,
+        TimeSpan? endTime)
+    {
+        if (!startTime.HasValue ||
+            !endTime.HasValue)
+        {
+            return "なし";
+        }
+
+        return
+            $"{startTime.Value:hh\\:mm}" +
+            $"～{endTime.Value:hh\\:mm}";
+    }
+
+    string DayName(DateTime date)
+    {
+        return date.DayOfWeek switch
+        {
+            DayOfWeek.Sunday => "日",
+            DayOfWeek.Monday => "月",
+            DayOfWeek.Tuesday => "火",
+            DayOfWeek.Wednesday => "水",
+            DayOfWeek.Thursday => "木",
+            DayOfWeek.Friday => "金",
+            DayOfWeek.Saturday => "土",
+            _ => ""
+        };
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-person-workspace me-2"></i>
+        社員トップ画面
+    </h2>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        @Model.Message
+    </div>
+}
+@if (!Model.IsCompanyWorkingDay)
+{
+    <div class="alert alert-warning d-flex align-items-center">
+        <i class="bi bi-calendar-x-fill fs-4 me-3"></i>
+
+        <div>
+            <div class="fw-bold">
+                本日は出勤対象日ではありません
+            </div>
+
+            <div>
+                日付区分：
+                @(string.IsNullOrWhiteSpace(Model.TodayHolidayName)
+                    ? Model.TodayDayType
+                    : $"{Model.TodayDayType}（{Model.TodayHolidayName}）")
+            </div>
+
+            <div class="small mt-1">
+                会社カレンダー上の休日のため、
+                出勤打刻はできません。
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.IsClockInMissingAlert)
+{
+    <div class="alert alert-danger d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+
+        <div>
+            <div class="fw-bold">
+                出勤打刻忘れ
+            </div>
+
+            <div>
+                @Model.AttendanceAlertMessage
+            </div>
+        </div>
+    </div>
+}
+else if (Model.IsClockOutMissingAlert)
+{
+    <div class="alert alert-warning d-flex align-items-center">
+        <i class="bi bi-exclamation-circle-fill fs-4 me-3"></i>
+
+        <div>
+            <div class="fw-bold">
+                退勤打刻忘れ
+            </div>
+
+            <div>
+                @Model.AttendanceAlertMessage
+            </div>
+        </div>
+    </div>
+}
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title">
+        <i class="bi bi-calendar2-week-fill me-1"></i>
+        本日の勤務条件
+    </div>
+
+    <div class="alert alert-light border mb-4">
+        <i class="bi bi-info-circle me-1"></i>
+        本日の遅刻時間、実働時間、休憩時間、
+        残業時間は以下の勤務条件を基準に計算されます。
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+                <div class="text-secondary small mb-2">
+                    <i class="bi bi-clock-fill me-1"></i>
+                    勤務時間
+                </div>
+
+                <div class="fw-bold fs-5">
+                    @Model.ScheduledStartTime.ToString(@"hh\:mm")
+                    ～
+                    @Model.ScheduledEndTime.ToString(@"hh\:mm")
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+                <div class="text-secondary small mb-2">
+                    <i class="bi bi-hourglass-split me-1"></i>
+                    所定労働時間
+                </div>
+
+                <div class="fw-bold fs-5">
+                    @FormatMinutes(Model.ScheduledWorkMinutes)
+                </div>
+
+                <div class="small text-secondary mt-1">
+                    @Model.ScheduledWorkMinutes 分
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+                <div class="text-secondary small mb-2">
+                    <i class="bi bi-cup-hot-fill me-1"></i>
+                    昼休憩
+                </div>
+
+                <div class="fw-bold fs-5">
+                    @Model.LunchBreakStartTime.ToString(@"hh\:mm")
+                    ～
+                    @Model.LunchBreakEndTime.ToString(@"hh\:mm")
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+                <div class="text-secondary small mb-2">
+                    <i class="bi bi-clock-history me-1"></i>
+                    小休憩
+                </div>
+
+                <div class="small">
+                    <span class="fw-bold">
+                        小休憩1：
+                    </span>
+
+                    @FormatBreak(
+                        Model.SmallBreak1StartTime,
+                        Model.SmallBreak1EndTime)
+                </div>
+
+                <div class="small mt-2">
+                    <span class="fw-bold">
+                        小休憩2：
+                    </span>
+
+                    @FormatBreak(
+                        Model.SmallBreak2StartTime,
+                        Model.SmallBreak2EndTime)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="gpsStatusArea"
+     class="alert alert-secondary d-flex align-items-center mb-3">
+
+    <i id="gpsStatusIcon"
+       class="bi bi-geo-alt me-2">
+    </i>
+
+    <div>
+        <div class="fw-bold">
+            位置情報
+        </div>
+
+        <div id="gpsStatusText"
+             class="small">
+            打刻時に現在地を取得します。
+        </div>
+    </div>
+</div>
+
+<div class="attendance-action-grid">
+    @if (!Model.IsCompanyWorkingDay &&
+     Model.ClockInTime == null)
+{
+    <div class="attendance-action-card clockin disabled-card">
+        <i class="bi bi-calendar-x-fill"></i>
+
+        <div class="title">
+            本日は休日
+        </div>
+
+        <div class="subtitle">
+            出勤打刻はできません
+        </div>
+    </div>
+}
+else if (Model.ClockInTime == null)
+{
+    <form asp-controller="Attendance"
+          asp-action="ClockIn"
+          method="post"
+          class="gps-attendance-form"
+          data-stamp-type="出勤">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+               name="latitude"
+               class="gps-latitude" />
+
+        <input type="hidden"
+               name="longitude"
+               class="gps-longitude" />
+
+        <input type="hidden"
+               name="accuracyMeters"
+               class="gps-accuracy" />
+
+        <input type="hidden"
+               name="gpsStatus"
+               class="gps-status"
+               value="未取得" />
+
+        <button type="submit"
+                class="attendance-action-card clockin w-100 gps-submit-button">
+
+            <i class="bi bi-clock"></i>
+
+            <div class="title">
+                出勤
+            </div>
+
+            <div class="subtitle">
+                出勤時に押してください
+            </div>
+        </button>
+    </form>
+}
+else
+{
+    <div class="attendance-action-card clockin disabled-card">
+        <i class="bi bi-clock-fill"></i>
+
+        <div class="title">
+            出勤済み
+        </div>
+
+        <div class="subtitle">
+            出勤登録済みです
+        </div>
+    </div>
+}
+
+    @if (Model.ClockInTime != null &&
+         Model.ClockOutTime == null)
+    {
+        <form asp-controller="Attendance"
+              asp-action="ClockOut"
+              method="post"
+              class="gps-attendance-form"
+              data-stamp-type="退勤">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="latitude"
+                   class="gps-latitude" />
+
+            <input type="hidden"
+                   name="longitude"
+                   class="gps-longitude" />
+
+            <input type="hidden"
+                   name="accuracyMeters"
+                   class="gps-accuracy" />
+
+            <input type="hidden"
+                   name="gpsStatus"
+                   class="gps-status"
+                   value="未取得" />
+
+            <button type="submit"
+                    class="attendance-action-card clockout w-100 gps-submit-button">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <div class="title">
+                    退勤
+                </div>
+
+                <div class="subtitle">
+                    退勤時に押してください
+                </div>
+            </button>
+        </form>
+    }
+    else if (Model.ClockOutTime != null)
+    {
+        <div class="attendance-action-card clockout disabled-card">
+            <i class="bi bi-check-circle-fill"></i>
+
+            <div class="title">
+                退勤済み
+            </div>
+
+            <div class="subtitle">
+                退勤登録済みです
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="attendance-action-card clockout disabled-card">
+            <i class="bi bi-box-arrow-right"></i>
+
+            <div class="title">
+                退勤
+            </div>
+
+            <div class="subtitle">
+                出勤後に押してください
+            </div>
+        </div>
+    }
+</div>
+
+<div class="attendance-card-grid">
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-calendar3"></i>
+            今日の日付
+        </div>
+
+        <div class="info-card-value">
+            @Model.Today.ToString("yyyy/MM/dd")
+        </div>
+
+        <div class="info-card-sub">
+            （@DayName(Model.Today)）
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-clock"></i>
+            現在時刻
+        </div>
+
+        <div class="info-card-value">
+            @Model.CurrentTime.ToString("HH:mm")
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-box-arrow-in-right"></i>
+            出勤時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatTime(Model.ClockInTime)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-box-arrow-right"></i>
+            退勤時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatTime(Model.ClockOutTime)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-cup-hot"></i>
+            休憩時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatMinutes(Model.BreakMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-hourglass-split"></i>
+            実働時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatMinutes(Model.WorkMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-alarm"></i>
+            遅刻時間
+        </div>
+
+        <div class="info-card-value @(Model.LateMinutes > 0 ? "text-danger" : "")">
+            @FormatMinutes(Model.LateMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-clock-history"></i>
+            残業時間
+        </div>
+
+        <div class="info-card-value">
+            @FormatMinutes(Model.OvertimeMinutes)
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-title">
+            <i class="bi bi-calendar-check"></i>
+            有給残日数
+        </div>
+
+        <div class="info-card-value">
+            @Model.RemainingPaidLeaveDays 日
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                const forms =
+                    document.querySelectorAll(
+                        ".gps-attendance-form"
+                    );
+
+                const statusArea =
+                    document.getElementById(
+                        "gpsStatusArea"
+                    );
+
+                const statusText =
+                    document.getElementById(
+                        "gpsStatusText"
+                    );
+
+                const statusIcon =
+                    document.getElementById(
+                        "gpsStatusIcon"
+                    );
+
+                forms.forEach(function (form) {
+                    form.addEventListener(
+                        "submit",
+                        function (event) {
+                            event.preventDefault();
+
+                            const button =
+                                form.querySelector(
+                                    ".gps-submit-button"
+                                );
+
+                            const stampType =
+                                form.dataset.stampType ??
+                                "打刻";
+
+                            if (button) {
+                                button.disabled = true;
+                            }
+
+                            setGpsDisplay(
+                                "取得中",
+                                stampType +
+                                "打刻のため、位置情報を取得しています。"
+                            );
+
+                            if (!navigator.geolocation) {
+                                setHiddenGpsValues(
+                                    form,
+                                    "",
+                                    "",
+                                    "",
+                                    "未対応"
+                                );
+
+                                setGpsDisplay(
+                                    "未対応",
+                                    "このブラウザは位置情報取得に対応していません。"
+                                );
+
+                                submitForm(form);
+                                return;
+                            }
+
+                            navigator.geolocation
+                                .getCurrentPosition(
+                                    function (position) {
+                                        const latitude =
+                                            position.coords
+                                                .latitude
+                                                .toFixed(7);
+
+                                        const longitude =
+                                            position.coords
+                                                .longitude
+                                                .toFixed(7);
+
+                                        const accuracy =
+                                            position.coords
+                                                .accuracy
+                                                .toFixed(1);
+
+                                        setHiddenGpsValues(
+                                            form,
+                                            latitude,
+                                            longitude,
+                                            accuracy,
+                                            "取得成功"
+                                        );
+
+                                        setGpsDisplay(
+                                            "取得成功",
+                                            "位置情報を取得しました。精度：約" +
+                                            accuracy +
+                                            "m"
+                                        );
+
+                                        submitForm(form);
+                                    },
+                                    function (error) {
+                                        let gpsStatus =
+                                            "取得失敗";
+
+                                        let message =
+                                            "位置情報を取得できませんでした。";
+
+                                        if (
+                                            error.code ===
+                                            error.PERMISSION_DENIED
+                                        ) {
+                                            gpsStatus =
+                                                "拒否";
+
+                                            message =
+                                                "位置情報の利用が許可されませんでした。";
+                                        }
+                                        else if (
+                                            error.code ===
+                                            error.POSITION_UNAVAILABLE
+                                        ) {
+                                            gpsStatus =
+                                                "取得失敗";
+
+                                            message =
+                                                "現在地を確認できませんでした。";
+                                        }
+                                        else if (
+                                            error.code ===
+                                            error.TIMEOUT
+                                        ) {
+                                            gpsStatus =
+                                                "タイムアウト";
+
+                                            message =
+                                                "位置情報の取得がタイムアウトしました。";
+                                        }
+
+                                        setHiddenGpsValues(
+                                            form,
+                                            "",
+                                            "",
+                                            "",
+                                            gpsStatus
+                                        );
+
+                                        setGpsDisplay(
+                                            gpsStatus,
+                                            message
+                                        );
+
+                                        submitForm(form);
+                                    },
+                                    {
+                                        enableHighAccuracy:
+                                            true,
+
+                                        timeout:
+                                            10000,
+
+                                        maximumAge:
+                                            0
+                                    }
+                                );
+                        }
+                    );
+                });
+
+                function setHiddenGpsValues(
+                    form,
+                    latitude,
+                    longitude,
+                    accuracy,
+                    gpsStatus
+                ) {
+                    form.querySelector(
+                        ".gps-latitude"
+                    ).value = latitude;
+
+                    form.querySelector(
+                        ".gps-longitude"
+                    ).value = longitude;
+
+                    form.querySelector(
+                        ".gps-accuracy"
+                    ).value = accuracy;
+
+                    form.querySelector(
+                        ".gps-status"
+                    ).value = gpsStatus;
+                }
+
+                function setGpsDisplay(
+                    status,
+                    message
+                ) {
+                    if (!statusArea ||
+                        !statusText ||
+                        !statusIcon)
+                    {
+                        return;
+                    }
+
+                    statusText.textContent =
+                        message;
+
+                    statusArea.classList.remove(
+                        "alert-secondary",
+                        "alert-info",
+                        "alert-success",
+                        "alert-warning",
+                        "alert-danger"
+                    );
+
+                    statusIcon.className =
+                        "bi me-2";
+
+                    if (status === "取得中") {
+                        statusArea.classList.add(
+                            "alert-info"
+                        );
+
+                        statusIcon.classList.add(
+                            "bi-geo-alt"
+                        );
+                    }
+                    else if (
+                        status === "取得成功"
+                    ) {
+                        statusArea.classList.add(
+                            "alert-success"
+                        );
+
+                        statusIcon.classList.add(
+                            "bi-geo-alt-fill"
+                        );
+                    }
+                    else if (
+                        status === "拒否" ||
+                        status === "未対応"
+                    ) {
+                        statusArea.classList.add(
+                            "alert-warning"
+                        );
+
+                        statusIcon.classList.add(
+                            "bi-exclamation-triangle"
+                        );
+                    }
+                    else {
+                        statusArea.classList.add(
+                            "alert-danger"
+                        );
+
+                        statusIcon.classList.add(
+                            "bi-x-circle"
+                        );
+                    }
+                }
+
+                function submitForm(form) {
+                    window.setTimeout(
+                        function () {
+                            form.submit();
+                        },
+                        300
+                    );
+                }
+            }
+        );
+    </script>
+}

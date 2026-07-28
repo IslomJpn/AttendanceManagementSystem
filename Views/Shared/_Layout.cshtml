@@ -1,0 +1,296 @@
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    var userName =
+        Context.Session.GetString("LoginUserName");
+
+    var role =
+        Context.Session.GetString("LoginUserRole");
+
+    var controller =
+        Convert.ToString(
+            ViewContext.RouteData.Values["controller"]);
+
+    var action =
+        Convert.ToString(
+            ViewContext.RouteData.Values["action"]);
+
+    var isLogin =
+        string.IsNullOrEmpty(role);
+
+    var isCompanyCalendarMenuActive =
+        controller == "Admin" &&
+        (
+            action == "CompanyCalendar" ||
+            action == "EditCompanyCalendarDay" ||
+            action == "GenerateCompanyCalendar"
+        );
+}
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - 勤怠管理システム
+    </title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+    @if (isLogin)
+    {
+        <header class="login-header">
+            <div class="login-brand">
+                勤怠管理システム
+            </div>
+        </header>
+
+        <main class="login-main">
+            @RenderBody()
+        </main>
+    }
+    else
+    {
+        <div class="app-shell">
+            <aside class="app-sidebar @(role == "Admin"
+                ? "admin-sidebar"
+                : "employee-sidebar")">
+
+                <div class="sidebar-logo">
+                    <i class="bi bi-shield-check"></i>
+                    <span>勤怠管理システム</span>
+                </div>
+
+                <nav class="sidebar-menu">
+                    @if (role == "Employee")
+                    {
+                        <a class="sidebar-link @(controller == "Attendance" && action == "Index" ? "active" : "")"
+                           asp-controller="Attendance"
+                           asp-action="Index">
+
+                            <i class="bi bi-house-door"></i>
+                            <span>トップ</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Attendance" && action == "History" ? "active" : "")"
+                           asp-controller="Attendance"
+                           asp-action="History">
+
+                            <i class="bi bi-clock-history"></i>
+                            <span>勤怠履歴</span>
+                        </a>
+                         <a class="sidebar-link @(controller == "Attendance" && action == "CompanyCalendar" ? "active" : "")"
+                           asp-controller="Attendance"
+                           asp-action="CompanyCalendar">
+
+                          <i class="bi bi-calendar3"></i>
+                          <span>会社カレンダー</span>
+                             </a>
+
+                        <a class="sidebar-link @(controller == "Correction" && action == "Create" ? "active" : "")"
+                           asp-controller="Correction"
+                           asp-action="Create">
+
+                            <i class="bi bi-pencil-square"></i>
+                            <span>修正申請</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Correction" && action == "History" ? "active" : "")"
+                           asp-controller="Correction"
+                           asp-action="History">
+
+                            <i class="bi bi-clock-history"></i>
+                            <span>修正申請履歴</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "PaidLeave" && action == "Create" ? "active" : "")"
+                           asp-controller="PaidLeave"
+                           asp-action="Create">
+
+                            <i class="bi bi-calendar-plus"></i>
+                            <span>有給申請</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "PaidLeave" && action == "MyBalance" ? "active" : "")"
+                           asp-controller="PaidLeave"
+                           asp-action="MyBalance">
+
+                            <i class="bi bi-calendar-check"></i>
+                            <span>有給状況</span>
+                        </a>
+                    }
+                    else if (role == "Admin")
+                    {
+                        <a class="sidebar-link @(controller == "Admin" && action == "Index" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="Index">
+
+                            <i class="bi bi-speedometer2"></i>
+                            <span>ダッシュボード</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "Employees" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="Employees">
+
+                            <i class="bi bi-people"></i>
+                            <span>社員一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "AttendanceList" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="AttendanceList">
+
+                            <i class="bi bi-list-check"></i>
+                            <span>勤怠一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "MonthlySummary" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="MonthlySummary">
+
+                            <i class="bi bi-bar-chart"></i>
+                            <span>月別集計</span>
+                        </a>
+
+                        <a class="sidebar-link @(isCompanyCalendarMenuActive ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="CompanyCalendar">
+
+                            <i class="bi bi-calendar3"></i>
+                            <span>会社カレンダー</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "MonthlyClosing" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="MonthlyClosing">
+
+                            <i class="bi bi-lock-fill"></i>
+                            <span>月次締め処理</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "CorrectionRequests" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="CorrectionRequests">
+
+                            <i class="bi bi-pencil-square"></i>
+                            <span>勤怠修正申請一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "PaidLeaveRequests" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="PaidLeaveRequests">
+
+                            <i class="bi bi-calendar-check"></i>
+                            <span>有給申請一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" &&
+                            (action == "PaidLeaveAlerts" ||
+                             action == "PaidLeaveNotice")
+                                ? "active"
+                                : "")"
+                           asp-controller="Admin"
+                           asp-action="PaidLeaveAlerts">
+
+                            <i class="bi bi-bell"></i>
+                            <span>有給アラート一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "AttendanceStampLogs" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="AttendanceStampLogs">
+
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>打刻ログ一覧</span>
+                        </a>
+
+                        <a class="sidebar-link @(controller == "Admin" && action == "OperationLogs" ? "active" : "")"
+                           asp-controller="Admin"
+                           asp-action="OperationLogs">
+
+                            <i class="bi bi-journal-text"></i>
+                            <span>操作ログ一覧</span>
+                        </a>
+                    }
+                </nav>
+            </aside>
+
+            <div class="app-main">
+                <header class="app-topbar">
+                    <div></div>
+
+                    <div class="topbar-user">
+                        <i class="bi bi-person-circle"></i>
+
+                        <span>
+                            @userName さん
+                        </span>
+
+                        <a asp-controller="Account"
+                           asp-action="ChangePassword"
+                           class="btn btn-outline-primary btn-sm">
+
+                            <i class="bi bi-key-fill me-1"></i>
+                            パスワード変更
+                        </a>
+
+                        <a asp-controller="Account"
+                           asp-action="Logout"
+                           class="btn btn-outline-secondary btn-sm">
+
+                            ログアウト
+                        </a>
+                    </div>
+                </header>
+
+                <main class="app-content">
+                    @RenderBody()
+                </main>
+
+                <footer class="app-footer">
+                    &copy; 2026 - 勤怠管理システム
+                </footer>
+            </div>
+        </div>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false)
+</body>
+</html>

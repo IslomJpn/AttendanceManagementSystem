@@ -1,0 +1,507 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminAttendanceStampLogViewModel
+
+@{
+    ViewData["Title"] = "打刻ログ一覧";
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-geo-alt-fill me-2"></i>打刻ログ一覧
+    </h2>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i>
+    出勤・退勤時の位置情報、端末、IPアドレスを確認できます。
+</div>
+
+<div class="filter-panel">
+    <form asp-controller="Admin"
+          asp-action="AttendanceStampLogs"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-2">
+            <label class="form-label">開始日</label>
+
+            <input type="text"
+                   name="startDate"
+                   value="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control js-date-picker"
+                   placeholder="開始日" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">終了日</label>
+
+            <input type="text"
+                   name="endDate"
+                   value="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control js-date-picker"
+                   placeholder="終了日" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">打刻種別</label>
+
+            <select name="stampType" class="form-select">
+                <option value="">すべて</option>
+
+                @if (Model.StampType == "出勤")
+                {
+                    <option value="出勤" selected>出勤</option>
+                }
+                else
+                {
+                    <option value="出勤">出勤</option>
+                }
+
+                @if (Model.StampType == "退勤")
+                {
+                    <option value="退勤" selected>退勤</option>
+                }
+                else
+                {
+                    <option value="退勤">退勤</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">GPS状態</label>
+
+            <select name="gpsStatus" class="form-select">
+                <option value="">すべて</option>
+
+                @if (Model.GpsStatus == "取得成功")
+                {
+                    <option value="取得成功" selected>取得成功</option>
+                }
+                else
+                {
+                    <option value="取得成功">取得成功</option>
+                }
+
+                @if (Model.GpsStatus == "拒否")
+                {
+                    <option value="拒否" selected>拒否</option>
+                }
+                else
+                {
+                    <option value="拒否">拒否</option>
+                }
+
+                @if (Model.GpsStatus == "取得失敗")
+                {
+                    <option value="取得失敗" selected>取得失敗</option>
+                }
+                else
+                {
+                    <option value="取得失敗">取得失敗</option>
+                }
+
+                @if (Model.GpsStatus == "タイムアウト")
+                {
+                    <option value="タイムアウト" selected>
+                        タイムアウト
+                    </option>
+                }
+                else
+                {
+                    <option value="タイムアウト">
+                        タイムアウト
+                    </option>
+                }
+
+                @if (Model.GpsStatus == "未対応")
+                {
+                    <option value="未対応" selected>未対応</option>
+                }
+                else
+                {
+                    <option value="未対応">未対応</option>
+                }
+
+                @if (Model.GpsStatus == "未取得")
+                {
+                    <option value="未取得" selected>未取得</option>
+                }
+                else
+                {
+                    <option value="未取得">未取得</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">キーワード</label>
+
+            <input type="text"
+                   name="keyword"
+                   value="@Model.Keyword"
+                   class="form-control"
+                   placeholder="社員名・メール・IP・端末" />
+        </div>
+
+        <div class="col-md-1">
+            <button type="submit"
+                    class="btn btn-primary w-100">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+
+        <div class="col-md-12">
+            <a asp-controller="Admin"
+               asp-action="AttendanceStampLogs"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                条件をクリア
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="text-muted">
+        検索結果：
+        <strong>@Model.TotalCount 件</strong>
+    </div>
+
+    <div class="text-muted small">
+        @Model.CurrentPage / @Model.TotalPages ページ
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>打刻日時</th>
+                    <th>社員</th>
+                    <th>部署</th>
+                    <th>種別</th>
+                    <th>結果</th>
+                    <th>GPS状態</th>
+                    <th>位置情報</th>
+                    <th>精度</th>
+                    <th>端末</th>
+                    <th>IPアドレス</th>
+                    <th>詳細</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Logs.Any())
+                {
+                    foreach (var log in Model.Logs)
+                    {
+                        var hasCoordinates =
+                            log.Latitude.HasValue &&
+                            log.Longitude.HasValue;
+
+                        var mapUrl = hasCoordinates
+                            ? $"https://www.google.com/maps?q=" +
+                              $"{log.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                              $"{log.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+                            : string.Empty;
+
+                        <tr>
+                            <td class="text-nowrap">
+                                @log.StampedAt.ToString("yyyy/MM/dd HH:mm:ss")
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">
+                                    @log.EmployeeName
+                                </div>
+
+                                <div class="small text-muted">
+                                    ID: @log.EmployeeId
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(
+                                    log.DepartmentName))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @log.DepartmentName
+                                }
+                            </td>
+
+                            <td>
+                                @if (log.StampType == "出勤")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i>
+                                        出勤
+                                    </span>
+                                }
+                                else if (log.StampType == "退勤")
+                                {
+                                    <span class="badge bg-dark">
+                                        <i class="bi bi-box-arrow-right me-1"></i>
+                                        退勤
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @log.StampType
+                                    </span>
+                                }
+
+                                <div class="small text-muted mt-1">
+                                    勤怠ID: @log.AttendanceId
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (log.Result == "成功")
+                                {
+                                    <span class="badge bg-success">
+                                        成功
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        @log.Result
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (log.GpsStatus == "取得成功")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>
+                                        取得成功
+                                    </span>
+                                }
+                                else if (log.GpsStatus == "拒否")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        拒否
+                                    </span>
+                                }
+                                else if (log.GpsStatus == "タイムアウト")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        タイムアウト
+                                    </span>
+                                }
+                                else if (log.GpsStatus == "未対応")
+                                {
+                                    <span class="badge bg-secondary">
+                                        未対応
+                                    </span>
+                                }
+                                else if (log.GpsStatus == "未取得")
+                                {
+                                    <span class="badge bg-secondary">
+                                        未取得
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        @log.GpsStatus
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @if (hasCoordinates)
+                                {
+                                    <div>
+                                        緯度：
+                                        @log.Latitude!.Value.ToString("F7")
+                                    </div>
+
+                                    <div>
+                                        経度：
+                                        @log.Longitude!.Value.ToString("F7")
+                                    </div>
+
+                                    <a href="@mapUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn btn-outline-primary btn-sm mt-1">
+                                        <i class="bi bi-map me-1"></i>
+                                        地図を表示
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        位置情報なし
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @if (log.AccuracyMeters.HasValue)
+                                {
+                                    <span>
+                                        約
+                                        @log.AccuracyMeters.Value.ToString("0.0")
+                                        m
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (log.DeviceType == "Mobile")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-phone me-1"></i>
+                                        スマートフォン
+                                    </span>
+                                }
+                                else if (log.DeviceType == "Tablet")
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-tablet me-1"></i>
+                                        タブレット
+                                    </span>
+                                }
+                                else if (log.DeviceType == "PC")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-pc-display me-1"></i>
+                                        PC
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        不明
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @if (string.IsNullOrWhiteSpace(
+                                    log.IpAddress))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @log.IpAddress
+                                }
+                            </td>
+
+                            <td style="min-width: 260px;">
+                                @if (string.IsNullOrWhiteSpace(
+                                    log.Details))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @log.Details
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    log.UserAgent))
+                                {
+                                    <details class="mt-2">
+                                        <summary class="small text-primary">
+                                            User-Agentを表示
+                                        </summary>
+
+                                        <div class="small text-muted mt-1 text-break">
+                                            @log.UserAgent
+                                        </div>
+                                    </details>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11"
+                            class="text-center text-muted py-4">
+                            打刻ログがありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="Admin"
+                   asp-action="AttendanceStampLogs"
+                   asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-stampType="@Model.StampType"
+                   asp-route-gpsStatus="@Model.GpsStatus"
+                   asp-route-keyword="@Model.Keyword"
+                   asp-route-page="@(Model.CurrentPage - 1)">
+                    前へ
+                </a>
+            </li>
+
+            @for (var pageNumber = 1;
+                pageNumber <= Model.TotalPages;
+                pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link"
+                       asp-controller="Admin"
+                       asp-action="AttendanceStampLogs"
+                       asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-stampType="@Model.StampType"
+                       asp-route-gpsStatus="@Model.GpsStatus"
+                       asp-route-keyword="@Model.Keyword"
+                       asp-route-page="@pageNumber">
+                        @pageNumber
+                    </a>
+                </li>
+            }
+
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="Admin"
+                   asp-action="AttendanceStampLogs"
+                   asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-stampType="@Model.StampType"
+                   asp-route-gpsStatus="@Model.GpsStatus"
+                   asp-route-keyword="@Model.Keyword"
+                   asp-route-page="@(Model.CurrentPage + 1)">
+                    次へ
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

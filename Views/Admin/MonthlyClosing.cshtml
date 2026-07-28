@@ -1,0 +1,480 @@
+﻿@model AttendanceManagementSystem.ViewModels.MonthlyClosingViewModel
+
+@{
+    ViewData["Title"] = "月次締め処理";
+
+    bool canClose =
+    !Model.IsClosed &&
+    Model.MissingClockOutCount == 0 &&
+    Model.PendingCorrectionRequestCount == 0 &&
+    Model.PendingPaidLeaveRequestCount == 0;
+
+    string closeConfirmMessage =
+        $"{Model.TargetYear}年{Model.TargetMonth}月の月次締めを実行します。よろしいですか？";
+
+    string reopenConfirmMessage =
+        $"{Model.TargetYear}年{Model.TargetMonth}月の月次締めを解除します。よろしいですか？";
+}
+
+@functions {
+    string FormatDateTime(DateTime? dateTime)
+    {
+        return dateTime.HasValue
+            ? dateTime.Value.ToString("yyyy/MM/dd HH:mm")
+            : "-";
+    }
+
+    string FormatComment(string? comment)
+    {
+        return string.IsNullOrWhiteSpace(comment)
+            ? "-"
+            : comment;
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+      <i class="bi bi-lock-fill me-2"></i>
+        月次締め処理
+    </h2>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle me-1"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title">
+        <i class="bi bi-calendar3 me-1"></i>
+        対象年月
+    </div>
+
+    <form asp-controller="Admin"
+          asp-action="MonthlyClosing"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-4">
+            <label for="yearMonth"
+                   class="form-label fw-bold">
+                対象年月
+            </label>
+
+           <input id="yearMonth"
+       name="yearMonth"
+       type="text"
+       value="@Model.YearMonth"
+       class="form-control"
+       autocomplete="off"
+       required />
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit"
+                    class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>
+                表示
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="summary-card h-100">
+            <div class="summary-label">
+                <i class="bi bi-calendar-event me-1"></i>
+                対象年月
+            </div>
+
+            <div class="summary-value text-primary">
+                @Model.TargetYear 年
+                @Model.TargetMonth 月
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="summary-card h-100">
+            <div class="summary-label">
+                <i class="bi bi-list-check me-1"></i>
+                勤怠件数
+            </div>
+
+            <div class="summary-value">
+                @Model.AttendanceCount 件
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="summary-card h-100">
+            <div class="summary-label">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                未退勤件数
+            </div>
+
+            <div class="summary-value @(Model.MissingClockOutCount > 0 ? "text-danger" : "text-success")">
+                @Model.MissingClockOutCount 件
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="summary-card h-100">
+            <div class="summary-label">
+                <i class="bi bi-pencil-square me-1"></i>
+                未処理修正申請
+            </div>
+
+            <div class="summary-value @(Model.PendingCorrectionRequestCount > 0 ? "text-danger" : "text-success")">
+                @Model.PendingCorrectionRequestCount 件
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="summary-card h-100">
+        <div class="summary-label">
+            <i class="bi bi-calendar-check me-1"></i>
+            未処理有給申請
+        </div>
+
+        <div class="summary-value @(Model.PendingPaidLeaveRequestCount > 0 ? "text-danger" : "text-success")">
+            @Model.PendingPaidLeaveRequestCount 件
+        </div>
+    </div>
+</div>
+@if (Model.IsClosed)
+{
+    <div class="alert alert-success">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-lock-fill fs-4 me-2"></i>
+
+            <div>
+                <div class="fw-bold">
+                    @Model.TargetYear 年 @Model.TargetMonth 月は締め済みです。
+                </div>
+
+                <div class="small mt-1">
+                    締め日時：
+                    @FormatDateTime(Model.ClosedAt)
+                    ／ 実行者：
+                    @(string.IsNullOrWhiteSpace(Model.ClosedByEmployeeName)
+                        ? "-"
+                        : Model.ClosedByEmployeeName)
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-unlock-fill fs-4 me-2"></i>
+
+            <div>
+                <div class="fw-bold">
+                    @Model.TargetYear 年 @Model.TargetMonth 月は未締めです。
+                </div>
+
+                <div class="small mt-1">
+                    月次締め後は対象月の勤怠変更を制限するための基準になります。
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!Model.IsClosed &&
+     (Model.MissingClockOutCount > 0 ||
+      Model.PendingCorrectionRequestCount > 0 ||
+      Model.PendingPaidLeaveRequestCount > 0))
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-octagon me-1"></i>
+      未退勤、未処理の勤怠修正申請、
+      または未処理の有給申請があるため、
+      月次締めを実行できません。
+    </div>
+}
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title">
+        <i class="bi bi-gear me-1"></i>
+        締め処理
+    </div>
+
+    @if (!Model.IsClosed)
+    {
+        <form asp-controller="Admin"
+              asp-action="CloseMonth"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="yearMonth"
+                   value="@Model.YearMonth" />
+
+            <div class="mb-3">
+                <label for="closingComment"
+                       class="form-label fw-bold">
+                    締めコメント
+                </label>
+
+                <textarea id="closingComment"
+                          name="closingComment"
+                          class="form-control"
+                          rows="3"
+                          maxlength="500"
+                          placeholder="必要に応じて締め処理に関するコメントを入力してください。"></textarea>
+
+                <div class="form-text">
+                    任意・500文字以内
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-danger"
+                    disabled="@(!canClose)"
+                    onclick="return confirm('@closeConfirmMessage');">
+                <i class="bi bi-lock me-1"></i>
+                月次締めを実行
+            </button>
+        </form>
+    }
+    else
+    {
+        <div class="mb-3">
+            <div class="small text-muted">
+                締めコメント
+            </div>
+
+            <div class="border rounded bg-light p-3 text-break">
+                @FormatComment(Model.ClosingComment)
+            </div>
+        </div>
+
+        <form asp-controller="Admin"
+              asp-action="ReopenMonth"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="yearMonth"
+                   value="@Model.YearMonth" />
+
+            <div class="mb-3">
+                <label for="reopenComment"
+                       class="form-label fw-bold">
+                    再開理由
+                    <span class="text-danger">*</span>
+                </label>
+
+                <textarea id="reopenComment"
+                          name="reopenComment"
+                          class="form-control"
+                          rows="3"
+                          maxlength="500"
+                          required
+                          placeholder="月次締めを解除する理由を入力してください。"></textarea>
+
+                <div class="form-text">
+                    必須・500文字以内
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-warning"
+                    onclick="return confirm('@reopenConfirmMessage');">
+                <i class="bi bi-unlock me-1"></i>
+                月次締めを解除
+            </button>
+        </form>
+    }
+</div>
+
+<div class="page-title-area mt-4">
+    <h2>
+        <i class="bi bi-clock-history me-2"></i>
+        月次締め履歴
+    </h2>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>対象年月</th>
+                    <th>状態</th>
+                    <th>締め日時</th>
+                    <th>締め実行者</th>
+                    <th style="min-width: 200px;">
+                        締めコメント
+                    </th>
+                    <th>再開日時</th>
+                    <th>再開実行者</th>
+                    <th style="min-width: 200px;">
+                        再開理由
+                    </th>
+                    <th>最終更新日時</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.History.Any())
+                {
+                    foreach (var item in Model.History)
+                    {
+                        <tr>
+                            <td class="text-nowrap fw-bold">
+                                @item.TargetYear 年
+                                @item.TargetMonth 月
+                            </td>
+
+                            <td>
+                                @if (item.IsClosed)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-lock-fill me-1"></i>
+                                        締め済み
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-unlock-fill me-1"></i>
+                                        未締め
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatDateTime(item.ClosedAt)
+                            </td>
+
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(
+                                    item.ClosedByEmployeeName))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @item.ClosedByEmployeeName
+                                }
+                            </td>
+
+                            <td>
+                                <div class="text-break">
+                                    @FormatComment(item.ClosingComment)
+                                </div>
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatDateTime(item.ReopenedAt)
+                            </td>
+
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(
+                                    item.ReopenedByEmployeeName))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @item.ReopenedByEmployeeName
+                                }
+                            </td>
+
+                            <td>
+                                <div class="text-break">
+                                    @FormatComment(item.ReopenComment)
+                                </div>
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.UpdatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9"
+                            class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            月次締め履歴がありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="MonthlySummary"
+       asp-route-yearMonth="@Model.YearMonth"
+       class="btn btn-primary">
+        <i class="bi bi-bar-chart me-1"></i>
+        月別集計を確認
+    </a>
+
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const yearMonthInput =
+                document.getElementById("yearMonth");
+
+            if (!yearMonthInput ||
+                typeof flatpickr === "undefined" ||
+                typeof monthSelectPlugin === "undefined") {
+                return;
+            }
+
+            flatpickr(yearMonthInput, {
+                locale: "ja",
+                defaultDate: yearMonthInput.value,
+                dateFormat: "Y-m",
+                altInput: true,
+                altFormat: "Y年m月",
+                disableMobile: true,
+
+                plugins: [
+                    new monthSelectPlugin({
+                        shorthand: true,
+                        dateFormat: "Y-m",
+                        altFormat: "Y年m月",
+                        theme: "light"
+                    })
+                ]
+            });
+        });
+    </script>
+}

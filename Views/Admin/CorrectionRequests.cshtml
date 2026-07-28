@@ -1,0 +1,208 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminCorrectionRequestViewModel
+
+@{
+    ViewData["Title"] = "勤怠修正申請一覧";
+}
+
+@functions {
+    string FormatTime(TimeSpan? time)
+    {
+        return time.HasValue
+            ? time.Value.ToString(@"hh\:mm")
+            : "-";
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-pencil-square me-2"></i>
+        勤怠修正申請一覧
+    </h2>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i>
+    申請内容を確認し、必要に応じて管理者コメントを入力してください。
+    却下する場合はコメントの入力が必要です。
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>社員名</th>
+                    <th>対象日</th>
+                    <th>修正項目</th>
+                    <th>修正前</th>
+                    <th>修正後</th>
+                    <th>理由</th>
+                    <th>状態</th>
+                    <th>申請日時</th>
+                    <th style="min-width: 300px;">管理者処理</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Requests.Any())
+                {
+                    foreach (var item in Model.Requests)
+                    {
+                        <tr>
+                            <td>
+                                <span class="fw-bold">
+                                    @item.EmployeeName
+                                </span>
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.TargetDate.ToString("yyyy/MM/dd")
+                            </td>
+
+                            <td>
+                                @if (item.CorrectionType == "出勤時間")
+                                {
+                                    <span class="badge bg-primary">
+                                        出勤時間
+                                    </span>
+                                }
+                                else if (item.CorrectionType == "退勤時間")
+                                {
+                                    <span class="badge bg-dark">
+                                        退勤時間
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @item.CorrectionType
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatTime(item.BeforeTime)
+                            </td>
+
+                            <td class="text-nowrap fw-bold">
+                                @item.AfterTime.ToString(@"hh\:mm")
+                            </td>
+
+                            <td style="min-width: 180px;">
+                                @if (string.IsNullOrWhiteSpace(item.Reason))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @item.Reason
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.Status == "申請中")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        申請中
+                                    </span>
+                                }
+                                else if (item.Status == "承認")
+                                {
+                                    <span class="badge bg-success">
+                                        承認
+                                    </span>
+                                }
+                                else if (item.Status == "却下")
+                                {
+                                    <span class="badge bg-danger">
+                                        却下
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @item.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </td>
+
+                            <td>
+                                @if (item.Status == "申請中")
+                                {
+                                    <form method="post">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@item.RequestId" />
+
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-bold">
+                                                管理者コメント
+                                            </label>
+
+                                            <textarea name="adminComment"
+                                                      class="form-control form-control-sm"
+                                                      rows="2"
+                                                      maxlength="500"
+                                                      placeholder="承認コメントまたは却下理由を入力してください"></textarea>
+
+                                            <div class="form-text">
+                                                500文字以内
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit"
+                                                    formaction="@Url.Action("ApproveCorrection", "Admin")"
+                                                    class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                承認
+                                            </button>
+
+                                            <button type="submit"
+                                                    formaction="@Url.Action("RejectCorrection", "Admin")"
+                                                    class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                却下
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        処理済み
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9"
+                            class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            勤怠修正申請がありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

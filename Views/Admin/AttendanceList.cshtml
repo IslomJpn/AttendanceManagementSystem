@@ -1,0 +1,597 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminAttendanceListViewModel
+
+@{
+    ViewData["Title"] = "勤怠一覧";
+}
+
+@functions {
+    string FormatTime(TimeSpan? time)
+    {
+        return time.HasValue
+            ? time.Value.ToString(@"hh\:mm")
+            : "-";
+    }
+
+    string FormatMinutes(int minutes)
+    {
+        var safeMinutes =
+            Math.Max(
+                0,
+                minutes
+            );
+
+        var hours =
+            safeMinutes / 60;
+
+        var remainingMinutes =
+            safeMinutes % 60;
+
+        return
+            $"{hours:D2}:{remainingMinutes:D2}";
+    }
+
+    string FormatDateTime(DateTime? dateTime)
+    {
+        return dateTime.HasValue
+            ? dateTime.Value.ToString("yyyy/MM/dd HH:mm")
+            : "-";
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-list-check me-2"></i>
+        勤怠一覧
+    </h2>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="filter-panel">
+    <form asp-controller="Admin"
+          asp-action="AttendanceList"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-3">
+            <label class="form-label">
+                対象年月
+            </label>
+
+            <input type="text"
+                   name="yearMonth"
+                   value="@Model.YearMonth"
+                   class="form-control js-month-picker"
+                   placeholder="対象年月"
+                   autocomplete="off" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">
+                部署
+            </label>
+
+            <select name="departmentId"
+                    class="form-select">
+
+                <option value="">
+                    すべて
+                </option>
+
+                @foreach (var department
+                          in Model.Departments)
+                {
+                    if (Model.DepartmentId ==
+                        department.DepartmentId)
+                    {
+                        <option value="@department.DepartmentId"
+                                selected>
+                            @department.DepartmentName
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@department.DepartmentId">
+                            @department.DepartmentName
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">
+                検索キーワード
+            </label>
+
+            <input type="text"
+                   name="keyword"
+                   value="@Model.Keyword"
+                   class="form-control"
+                   placeholder="社員名またはメールアドレス" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                <i class="bi bi-search me-1"></i>
+                検索
+            </button>
+        </div>
+
+        <div class="col-md-12">
+            <a asp-controller="Admin"
+               asp-action="AttendanceList"
+               class="btn btn-outline-secondary btn-sm">
+
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                条件をクリア
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="alert alert-light border">
+    <div class="fw-bold mb-1">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        未打刻と欠勤の違い
+    </div>
+
+    <div class="small">
+        「未打刻」は出勤記録が確認できていない状態です。
+        管理者が理由を確認して欠勤確定した場合のみ、
+        「欠勤」として集計されます。
+        勤怠修正申請中の日は、申請処理が完了するまで欠勤確定できません。
+    </div>
+</div>
+
+<div class="d-flex flex-column flex-md-row
+    justify-content-between align-items-md-center
+    gap-3 mb-3">
+
+    <div class="text-muted">
+        検索結果：
+        <strong>
+            @Model.Attendances.Count 件
+        </strong>
+    </div>
+
+    <a asp-controller="Admin"
+       asp-action="ExportAttendanceCsv"
+       asp-route-yearMonth="@Model.YearMonth"
+       asp-route-departmentId="@Model.DepartmentId"
+       asp-route-keyword="@Model.Keyword"
+       class="btn btn-success">
+
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+        CSV出力
+    </a>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="text-nowrap">
+                        日付
+                    </th>
+
+                    <th class="text-nowrap">
+                        社員名
+                    </th>
+
+                    <th class="text-nowrap">
+                        部署
+                    </th>
+
+                    <th class="text-nowrap">
+                        出勤
+                    </th>
+
+                    <th class="text-nowrap">
+                        退勤
+                    </th>
+
+                    <th class="text-nowrap">
+                        休憩
+                    </th>
+
+                    <th class="text-nowrap">
+                        実働
+                    </th>
+
+                    <th class="text-nowrap">
+                        遅刻
+                    </th>
+
+                    <th class="text-nowrap">
+                        残業
+                    </th>
+
+                    <th class="text-nowrap">
+                        状態
+                    </th>
+
+                    <th style="min-width: 260px;">
+                        欠勤情報
+                    </th>
+
+                    <th style="min-width: 320px;">
+                        欠勤操作
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Attendances.Any())
+                {
+                    foreach (var item
+                             in Model.Attendances)
+                    {
+                        var rowClass =
+                            item.IsAbsent
+                                ? "table-danger"
+                                : item.HasPendingCorrectionRequest
+                                    ? "table-info"
+                                    : item.Status == "未打刻"
+                                        ? "table-warning"
+                                        : string.Empty;
+
+                        <tr class="@rowClass">
+                            <td class="text-nowrap fw-bold">
+                                @item.AttendanceDate.ToString("yyyy/MM/dd")
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">
+                                    @item.EmployeeName
+                                </div>
+
+                                <div class="small text-muted">
+                                    ID: @item.EmployeeId
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(
+                                    item.DepartmentName))
+                                {
+                                    <span class="text-muted">
+                                        -
+                                    </span>
+                                }
+                                else
+                                {
+                                    @item.DepartmentName
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatTime(item.ClockInTime)
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatTime(item.ClockOutTime)
+                            </td>
+
+                            <td class="text-nowrap">
+                                @item.BreakMinutes 分
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatMinutes(item.WorkMinutes)
+                            </td>
+
+                            <td class="text-nowrap
+                                @(item.LateMinutes > 0
+                                    ? "text-danger fw-bold"
+                                    : "")">
+
+                                @FormatMinutes(item.LateMinutes)
+                            </td>
+
+                            <td class="text-nowrap">
+                                @FormatMinutes(item.OvertimeMinutes)
+                            </td>
+
+                            <td>
+                                @if (item.Status == "退勤済み")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        退勤済み
+                                    </span>
+                                }
+                                else if (item.Status == "遅刻")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-alarm me-1"></i>
+                                        遅刻
+                                    </span>
+                                }
+                                else if (item.Status == "出勤中")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-person-workspace me-1"></i>
+                                        出勤中
+                                    </span>
+                                }
+                                else if (item.Status == "未打刻" ||
+                                         item.Status == "未出勤")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        未打刻
+                                    </span>
+                                }
+                                else if (item.Status == "欠勤")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-person-x-fill me-1"></i>
+                                        欠勤
+                                    </span>
+                                }
+                                else if (item.Status == "有給")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        有給
+                                    </span>
+                                }
+                                else if (item.Status == "有給予定")
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        有給予定
+                                    </span>
+                                }
+                                else if (item.Status == "休日")
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-house-door-fill me-1"></i>
+                                        休日
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @item.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.IsAbsent)
+                                {
+                                    <div class="mb-2">
+                                        <span class="badge bg-danger">
+                                            欠勤確定済み
+                                        </span>
+                                    </div>
+
+                                    <div class="small mb-1">
+                                        <span class="fw-bold">
+                                            理由：
+                                        </span>
+
+                                        @if (string.IsNullOrWhiteSpace(
+                                            item.AbsenceReason))
+                                        {
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-break">
+                                                @item.AbsenceReason
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="small mb-1">
+                                        <span class="fw-bold">
+                                            確定者：
+                                        </span>
+
+                                        @(string.IsNullOrWhiteSpace(
+                                            item.AbsenceConfirmedByName)
+                                            ? "-"
+                                            : item.AbsenceConfirmedByName)
+                                    </div>
+
+                                    <div class="small">
+                                        <span class="fw-bold">
+                                            確定日時：
+                                        </span>
+
+                                        @FormatDateTime(
+                                            item.AbsenceConfirmedAt
+                                        )
+                                    </div>
+                                }
+                                else if (item.HasPendingCorrectionRequest)
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        勤怠修正申請中
+                                    </span>
+                                }
+                                else if (item.Status == "未打刻" ||
+                                         item.Status == "未出勤")
+                                {
+                                    <span class="text-warning fw-bold">
+                                        欠勤未確定
+                                    </span>
+                                }
+                                else if (item.HasApprovedPaidLeave)
+                                {
+                                    <span class="text-success">
+                                        承認済み有給
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        -
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.CanConfirmAbsence)
+                                {
+                                    <form asp-controller="Admin"
+                                          asp-action="ConfirmAbsence"
+                                          method="post"
+                                          class="d-flex flex-column gap-2"
+                                          onsubmit="return confirm('この日を欠勤として確定しますか？');">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="employeeId"
+                                               value="@item.EmployeeId" />
+
+                                        <input type="hidden"
+                                               name="attendanceDate"
+                                               value="@item.AttendanceDate.ToString("yyyy-MM-dd")" />
+
+                                        <input type="hidden"
+                                               name="yearMonth"
+                                               value="@Model.YearMonth" />
+
+                                        <input type="hidden"
+                                               name="departmentId"
+                                               value="@Model.DepartmentId" />
+
+                                        <input type="hidden"
+                                               name="keyword"
+                                               value="@Model.Keyword" />
+
+                                        <textarea name="absenceReason"
+                                                  class="form-control form-control-sm"
+                                                  rows="2"
+                                                  maxlength="300"
+                                                  required
+                                                  placeholder="欠勤理由を入力してください"></textarea>
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger">
+
+                                            <i class="bi bi-person-x-fill me-1"></i>
+                                            欠勤確定
+                                        </button>
+                                    </form>
+                                }
+                                else if (item.CanCancelAbsence &&
+                                         item.AttendanceId.HasValue)
+                                {
+                                    <form asp-controller="Admin"
+                                          asp-action="CancelAbsence"
+                                          method="post"
+                                          onsubmit="return confirm('欠勤確定を取り消しますか？');">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="attendanceId"
+                                               value="@item.AttendanceId.Value" />
+
+                                        <input type="hidden"
+                                               name="yearMonth"
+                                               value="@Model.YearMonth" />
+
+                                        <input type="hidden"
+                                               name="departmentId"
+                                               value="@Model.DepartmentId" />
+
+                                        <input type="hidden"
+                                               name="keyword"
+                                               value="@Model.Keyword" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger w-100">
+
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                            欠勤確定取消
+                                        </button>
+                                    </form>
+                                }
+                                else if (item.HasPendingCorrectionRequest)
+                                {
+                                    <div class="alert alert-info py-2 px-3 mb-0 small">
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        勤怠修正申請中のため、
+                                        欠勤確定できません。
+                                    </div>
+                                }
+                                else if (item.HasApprovedPaidLeave)
+                                {
+                                    <span class="small text-muted">
+                                        有給日のため欠勤確定できません。
+                                    </span>
+                                }
+                                else if (!item.IsCompanyWorkingDay)
+                                {
+                                    <span class="small text-muted">
+                                        会社休日のため対象外です。
+                                    </span>
+                                }
+                                else if (item.ClockInTime.HasValue)
+                                {
+                                    <span class="small text-muted">
+                                        出勤打刻があるため対象外です。
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        -
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="12"
+                            class="text-center text-muted py-5">
+
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            対象の勤怠データがありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+
+        <i class="bi bi-arrow-left me-1"></i>
+        戻る
+    </a>
+</div>

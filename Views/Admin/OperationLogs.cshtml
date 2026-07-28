@@ -1,0 +1,404 @@
+﻿@model AttendanceManagementSystem.ViewModels.AdminOperationLogViewModel
+
+@{
+    ViewData["Title"] = "操作ログ一覧";
+}
+
+@functions {
+    string FormatTargetType(string? targetType)
+    {
+        return targetType switch
+        {
+            "Employee" => "社員",
+            "Attendance" => "勤怠",
+            "Account" => "アカウント",
+            "PaidLeaveRequest" => "有給申請",
+            "PaidLeaveBalance" => "有給残日数",
+            "AttendanceCorrectionRequest" => "勤怠修正申請",
+            "OperationLog" => "操作ログ",
+            "Department" => "部署",
+            "AttendanceStampLog" => "打刻ログ",
+            "MonthlyClose" => "月次締め",
+            null => "-",
+            "" => "-",
+            _ => targetType
+        };
+    }
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-journal-text me-2"></i>操作ログ一覧
+    </h2>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i>
+    ログイン、打刻、申請、承認などのシステム操作履歴を確認できます。
+</div>
+
+<div class="filter-panel">
+    <form asp-controller="Admin"
+          asp-action="OperationLogs"
+          method="get"
+          class="row g-3 align-items-end">
+
+        <div class="col-md-2">
+            <label class="form-label">開始日</label>
+            <input type="text"
+                   name="startDate"
+                   value="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control js-date-picker"
+                   placeholder="開始日" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">終了日</label>
+            <input type="text"
+                   name="endDate"
+                   value="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control js-date-picker"
+                   placeholder="終了日" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">操作名</label>
+            <select name="actionName" class="form-select">
+                <option value="">すべて</option>
+
+                @foreach (var name in Model.ActionNames)
+                {
+                    if (Model.ActionName == name)
+                    {
+                        <option value="@name" selected>@name</option>
+                    }
+                    else
+                    {
+                        <option value="@name">@name</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">結果</label>
+            <select name="result" class="form-select">
+                <option value="">すべて</option>
+
+                @if (Model.Result == "成功")
+                {
+                    <option value="成功" selected>成功</option>
+                }
+                else
+                {
+                    <option value="成功">成功</option>
+                }
+
+                @if (Model.Result == "失敗")
+                {
+                    <option value="失敗" selected>失敗</option>
+                }
+                else
+                {
+                    <option value="失敗">失敗</option>
+                }
+
+                @if (Model.Result == "実行")
+                {
+                    <option value="実行" selected>実行</option>
+                }
+                else
+                {
+                    <option value="実行">実行</option>
+                }
+
+                @if (Model.Result == "ロック中")
+                {
+                    <option value="ロック中" selected>ロック中</option>
+                }
+                else
+                {
+                    <option value="ロック中">ロック中</option>
+                }
+
+                @if (Model.Result == "無効")
+                {
+                    <option value="無効" selected>無効</option>
+                }
+                else
+                {
+                    <option value="無効">無効</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">キーワード</label>
+            <input type="text"
+                   name="keyword"
+                   value="@Model.Keyword"
+                   class="form-control"
+                   placeholder="社員名・詳細・IP・端末" />
+        </div>
+
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+
+        <div class="col-md-12">
+            <a asp-controller="Admin"
+               asp-action="OperationLogs"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise me-1"></i>条件をクリア
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="text-muted">
+        検索結果：<strong>@Model.TotalCount 件</strong>
+    </div>
+
+    <div class="text-muted small">
+        @Model.CurrentPage / @Model.TotalPages ページ
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>日時</th>
+                    <th>ユーザー</th>
+                    <th>権限</th>
+                    <th>操作</th>
+                    <th>結果</th>
+                    <th>対象</th>
+                    <th>端末</th>
+                    <th>IPアドレス</th>
+                    <th>詳細</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Logs.Any())
+                {
+                    foreach (var log in Model.Logs)
+                    {
+                        <tr>
+                            <td class="text-nowrap">
+                                @log.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss")
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">@log.UserName</div>
+
+                                @if (log.EmployeeId.HasValue)
+                                {
+                                    <div class="small text-muted">
+                                        ID: @log.EmployeeId
+                                    </div>
+                                }
+                            </td>
+
+                            <td>
+                                @if (log.Role == "Admin")
+                                {
+                                    <span class="badge bg-dark">管理者</span>
+                                }
+                                else if (log.Role == "Employee")
+                                {
+                                    <span class="badge bg-primary">社員</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">不明</span>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="fw-bold">@log.ActionName</span>
+                            </td>
+
+                            <td>
+                                @if (log.Result == "成功")
+                                {
+                                    <span class="badge bg-success">成功</span>
+                                }
+                                else if (log.Result == "失敗")
+                                {
+                                    <span class="badge bg-danger">失敗</span>
+                                }
+                                else if (log.Result == "ロック中")
+                                {
+                                    <span class="badge bg-warning text-dark">ロック中</span>
+                                }
+                                else if (log.Result == "無効")
+                                {
+                                    <span class="badge bg-secondary">無効</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        @log.Result
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">
+                                    @FormatTargetType(log.TargetType)
+                                </div>
+
+                                @if (log.TargetId.HasValue)
+                                {
+                                    <div class="small text-muted">
+                                        ID: @log.TargetId
+                                    </div>
+                                }
+                            </td>
+
+                            <td>
+                                @if (log.DeviceType == "Mobile")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-phone me-1"></i>Mobile
+                                    </span>
+                                }
+                                else if (log.DeviceType == "Tablet")
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-tablet me-1"></i>Tablet
+                                    </span>
+                                }
+                                else if (log.DeviceType == "PC")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-pc-display me-1"></i>PC
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Unknown
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-nowrap">
+                                @if (string.IsNullOrWhiteSpace(log.IpAddress))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @log.IpAddress
+                                }
+                            </td>
+
+                            <td style="min-width: 280px;">
+                                @if (string.IsNullOrWhiteSpace(log.Details))
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    @log.Details
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(log.UserAgent))
+                                {
+                                    <details class="mt-2">
+                                        <summary class="small text-primary">
+                                            User-Agentを表示
+                                        </summary>
+
+                                        <div class="small text-muted mt-1 text-break">
+                                            @log.UserAgent
+                                        </div>
+                                    </details>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9"
+                            class="text-center text-muted py-4">
+                            操作ログがありません。
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="Admin"
+                   asp-action="OperationLogs"
+                   asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-actionName="@Model.ActionName"
+                   asp-route-result="@Model.Result"
+                   asp-route-keyword="@Model.Keyword"
+                   asp-route-page="@(Model.CurrentPage - 1)">
+                    前へ
+                </a>
+            </li>
+
+            @for (var pageNumber = 1;
+                pageNumber <= Model.TotalPages;
+                pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link"
+                       asp-controller="Admin"
+                       asp-action="OperationLogs"
+                       asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-actionName="@Model.ActionName"
+                       asp-route-result="@Model.Result"
+                       asp-route-keyword="@Model.Keyword"
+                       asp-route-page="@pageNumber">
+                        @pageNumber
+                    </a>
+                </li>
+            }
+
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="Admin"
+                   asp-action="OperationLogs"
+                   asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-actionName="@Model.ActionName"
+                   asp-route-result="@Model.Result"
+                   asp-route-keyword="@Model.Keyword"
+                   asp-route-page="@(Model.CurrentPage + 1)">
+                    次へ
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<div class="action-area">
+    <a asp-controller="Admin"
+       asp-action="Index"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>戻る
+    </a>
+</div>

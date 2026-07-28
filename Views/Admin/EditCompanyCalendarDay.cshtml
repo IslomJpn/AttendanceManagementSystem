@@ -1,0 +1,295 @@
+﻿@model AttendanceManagementSystem.ViewModels.CompanyCalendarDayEditViewModel
+
+@{
+    ViewData["Title"] = "会社カレンダー編集";
+
+    var yearMonth =
+        Model.CalendarDate.ToString("yyyy-MM");
+
+    var dayOfWeekName =
+        Model.CalendarDate.DayOfWeek switch
+        {
+            DayOfWeek.Sunday => "日",
+            DayOfWeek.Monday => "月",
+            DayOfWeek.Tuesday => "火",
+            DayOfWeek.Wednesday => "水",
+            DayOfWeek.Thursday => "木",
+            DayOfWeek.Friday => "金",
+            DayOfWeek.Saturday => "土",
+            _ => ""
+        };
+}
+
+<div class="page-title-area">
+    <h2>
+        <i class="bi bi-calendar-event me-2"></i>
+        会社カレンダー編集
+    </h2>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle-fill me-1"></i>
+    日付区分を選択すると、所定労働日または休日が自動的に設定されます。
+</div>
+
+<div class="page-panel mb-4">
+    <div class="page-panel-title">
+        <i class="bi bi-calendar3 me-1"></i>
+        対象日
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="border rounded-3 bg-light p-3 h-100">
+                <div class="small text-secondary mb-2">
+                    日付
+                </div>
+
+                <div class="fw-bold fs-5">
+                    @Model.CalendarDate.ToString("yyyy/MM/dd")
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="border rounded-3 bg-light p-3 h-100">
+                <div class="small text-secondary mb-2">
+                    曜日
+                </div>
+
+                <div class="fw-bold fs-5">
+                    （@dayOfWeekName）
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="border rounded-3 bg-light p-3 h-100">
+                <div class="small text-secondary mb-2">
+                    現在の勤務区分
+                </div>
+
+                @if (Model.IsWorkingDay)
+                {
+                    <div class="fw-bold text-success fs-5">
+                        <i class="bi bi-briefcase-fill me-1"></i>
+                        所定労働日
+                    </div>
+                }
+                else
+                {
+                    <div class="fw-bold text-danger fs-5">
+                        <i class="bi bi-house-door-fill me-1"></i>
+                        休日
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-panel">
+    <div class="page-panel-title">
+        <i class="bi bi-pencil-square me-1"></i>
+        カレンダー設定
+    </div>
+
+    <form asp-controller="Admin"
+          asp-action="EditCompanyCalendarDay"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="CompanyCalendarDayId"
+               type="hidden" />
+
+        <input asp-for="CalendarDate"
+               type="hidden" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger">
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="DayType"
+                   class="form-label fw-bold">
+            </label>
+
+            <select asp-for="DayType"
+                    id="dayTypeSelect"
+                    class="form-select">
+
+                <option value="出勤日">
+                    出勤日
+                </option>
+
+                <option value="会社休日">
+                    会社休日
+                </option>
+
+                <option value="法定休日">
+                    法定休日
+                </option>
+
+                <option value="祝日">
+                    祝日
+                </option>
+
+                <option value="特別出勤日">
+                    特別出勤日
+                </option>
+
+                <option value="年末年始休暇">
+                    年末年始休暇
+                </option>
+
+                <option value="夏季休暇">
+                    夏季休暇
+                </option>
+            </select>
+
+            <span asp-validation-for="DayType"
+                  class="text-danger">
+            </span>
+
+            <div class="form-text mt-2">
+                出勤日・特別出勤日は所定労働日、
+                それ以外は休日として扱われます。
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold">
+                変更後の勤務区分
+            </label>
+
+            <div id="workingDayPreview"
+                 class="alert mb-0">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="HolidayName"
+                   class="form-label fw-bold">
+            </label>
+
+            <input asp-for="HolidayName"
+                   class="form-control"
+                   maxlength="100"
+                   placeholder="例：海の日、創立記念日、夏季休暇" />
+
+            <span asp-validation-for="HolidayName"
+                  class="text-danger">
+            </span>
+
+            <div class="form-text">
+                休日名や会社行事名がある場合に入力してください。
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Note"
+                   class="form-label fw-bold">
+            </label>
+
+            <textarea asp-for="Note"
+                      class="form-control"
+                      rows="4"
+                      maxlength="500"
+                      placeholder="管理者用の備考を入力してください。">
+            </textarea>
+
+            <span asp-validation-for="Note"
+                  class="text-danger">
+            </span>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            この設定は未打刻判定、月次集計、欠勤判定、
+            有給出勤率の計算に使用されます。
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit"
+                    class="btn btn-primary"
+                    onclick="return confirm('この日の会社カレンダー設定を更新しますか？');">
+
+                <i class="bi bi-save-fill me-1"></i>
+                更新する
+            </button>
+
+            <a asp-controller="Admin"
+               asp-action="CompanyCalendar"
+               asp-route-yearMonth="@yearMonth"
+               class="btn btn-secondary">
+
+                <i class="bi bi-arrow-left me-1"></i>
+                戻る
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                const dayTypeSelect =
+                    document.getElementById(
+                        "dayTypeSelect"
+                    );
+
+                const workingDayPreview =
+                    document.getElementById(
+                        "workingDayPreview"
+                    );
+
+                function updateWorkingDayPreview() {
+                    const selectedDayType =
+                        dayTypeSelect.value;
+
+                    const isWorkingDay =
+                        selectedDayType === "出勤日" ||
+                        selectedDayType === "特別出勤日";
+
+                    workingDayPreview.classList.remove(
+                        "alert-success",
+                        "alert-secondary"
+                    );
+
+                    if (isWorkingDay) {
+                        workingDayPreview.classList.add(
+                            "alert-success"
+                        );
+
+                        workingDayPreview.innerHTML =
+                            '<i class="bi bi-briefcase-fill me-1"></i>' +
+                            '<strong>所定労働日</strong>' +
+                            'として登録されます。';
+                    }
+                    else {
+                        workingDayPreview.classList.add(
+                            "alert-secondary"
+                        );
+
+                        workingDayPreview.innerHTML =
+                            '<i class="bi bi-house-door-fill me-1"></i>' +
+                            '<strong>休日</strong>' +
+                            'として登録されます。';
+                    }
+                }
+
+                dayTypeSelect.addEventListener(
+                    "change",
+                    updateWorkingDayPreview
+                );
+
+                updateWorkingDayPreview();
+            }
+        );
+    </script>
+}
