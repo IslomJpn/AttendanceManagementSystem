@@ -1,14 +1,19 @@
 # Attendance Management System
 
-Professional Attendance Management System developed using ASP.NET Core MVC and SQL Server.
+Professional web-based Attendance Management System developed using ASP.NET Core MVC, Entity Framework Core, SQL Server, and Bootstrap.
 
 ---
 
 # Project Overview
 
-This project is a web-based attendance management system designed for company employees and administrators.
+The Attendance Management System is designed to help companies manage employee attendance efficiently.
 
-The system allows employees to manage daily attendance while administrators can monitor attendance records, employee information, correction requests, and paid leave requests.
+The system provides two user roles:
+
+- Employee
+- Administrator
+
+Employees can manage their own attendance, while administrators can monitor attendance records, manage employees, approve requests, and generate attendance summaries.
 
 ---
 
@@ -24,6 +29,9 @@ The system allows employees to manage daily attendance while administrators can 
 - Attendance Correction Request
 - Paid Leave Request
 - Paid Leave History
+- Password Change
+
+---
 
 ## Administrator
 
@@ -31,14 +39,17 @@ The system allows employees to manage daily attendance while administrators can 
 - Dashboard
 - Employee Management
 - Attendance Management
+- Attendance Search
 - Monthly Attendance Summary
+- Paid Leave Management
 - Attendance Correction Approval
 - Paid Leave Approval
-- Attendance Search
+- Password Reset
+- CSV Export
 
 ---
 
-# Technologies
+# Technology Stack
 
 - C#
 - ASP.NET Core MVC
@@ -51,6 +62,22 @@ The system allows employees to manage daily attendance while administrators can 
 
 ---
 
+# System Architecture
+
+```
+Presentation Layer
+        │
+ASP.NET Core MVC
+        │
+Business Logic
+        │
+Entity Framework Core
+        │
+SQL Server Database
+```
+
+---
+
 # Project Structure
 
 ```
@@ -59,27 +86,29 @@ Models/
 ViewModels/
 Views/
 Services/
-Data/
 Helpers/
+Data/
+Migrations/
+Properties/
 wwwroot/
 
 Documents/
-Screenshots/
 Database/
 Demo/
+Screenshots/
 ```
 
 ---
 
 # Documents
 
-This repository contains the following project documents.
+The following project documents are included.
 
-- Requirements Definition (要件定義書)
-- Basic Design (基本設計書)
-- Detailed Design (詳細設計書)
-
-Both PDF and Microsoft Word versions are included.
+| Document | Format |
+|----------|--------|
+| Requirements Definition (要件定義書) | PDF / DOCX |
+| Basic Design (基本設計書) | PDF / DOCX |
+| Detailed Design (詳細設計書) | PDF / DOCX |
 
 ---
 
@@ -87,65 +116,90 @@ Both PDF and Microsoft Word versions are included.
 
 Database Backup
 
+```
 AttendanceManagementSystemFinalDb.bak
+```
 
-Restore the database using Microsoft SQL Server Management Studio.
+Restore the database using Microsoft SQL Server Management Studio (SSMS).
 
 ---
 
-# Demo
-
-Demo Video
+# Demo Video
 
 Google Drive
 
-(Paste your Google Drive video link here.)
-
 https://drive.google.com/drive/folders/1AX95a7W2CRKgWBPT2wjm1GvNjuexaWuB
+
+---
 
 # Screenshots
 
-Project screenshots are available in the Screenshots folder.
+Project screenshots are available inside the **Screenshots** folder.
+
+Examples include:
+
+- Login
+- Employee Dashboard
+- Admin Dashboard
+- Attendance History
+- Employee Management
+- Attendance List
+- Monthly Summary
+- Paid Leave
+- Attendance Correction
 
 ---
 
 # Installation
 
-1. Clone the repository
+1. Clone this repository
 
-2. Restore the database
+```
+git clone https://github.com/IslomJpn/AttendanceManagementSystem.git
+```
 
-3. Open the solution using Visual Studio 2022
+2. Open the solution using Visual Studio 2022
 
-4. Restore NuGet packages
+3. Restore NuGet packages
 
-5. Build the project
+4. Restore the SQL Server database
 
-6. Run the project
+5. Update the Connection String if necessary
+
+6. Build the solution
+
+7. Run the project
 
 ---
 
 # Development Environment
 
-Visual Studio 2022
+- Visual Studio 2022
+- .NET 8
+- SQL Server
+- Entity Framework Core
+- Bootstrap 5
 
-.NET 8
+---
 
-SQL Server
+# Future Improvements
 
-Entity Framework Core
-
-Bootstrap
+- Email Notifications
+- Dashboard Charts
+- Mobile Responsive UI Improvements
+- PDF Export
+- Audit Logs
+- GPS Attendance
+- Face Recognition Login
 
 ---
 
 # Author
 
-Islombek Kamolov
+**Islombek Kamolov**
 
 ---
 
 # License
 
 This project was developed for educational and portfolio purposes.
-
